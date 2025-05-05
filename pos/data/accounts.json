@@ -1,0 +1,43 @@
+
+{
+  "staff": [
+    {
+      "id": "STF-001",
+      "username": "admin",
+      "password": "admin123",
+      "role": "manager",
+      "permissions": ["all"],
+      "active": true
+    },
+    {
+      "id": "STF-002", 
+      "username": "cashier1",
+      "password": "cash123",
+      "role": "cashier",
+      "permissions": ["sales", "inventory_view"],
+      "active": true
+    },
+    {
+      "id": "STF-003",
+      "username": "inventory",
+      "password": "inv123", 
+      "role": "inventory",
+      "permissions": ["inventory_edit", "inventory_view"],
+      "active": true
+    }
+  ],
+  "roles": {
+    "manager": {
+      "access_level": 3,
+      "description": "Full system access"
+    },
+    "cashier": {
+      "access_level": 1,
+      "description": "Sales and basic inventory view"
+    },
+    "inventory": {
+      "access_level": 2, 
+      "description": "Inventory management"
+    }
+  }
+}

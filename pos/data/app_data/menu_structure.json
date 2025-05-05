@@ -1,0 +1,55 @@
+{
+    "Dashboard": {
+        "icon": "home",
+        "children": [],
+        "view": "DashboardView"
+    },
+    "Products": {
+        "icon": "package-variant",
+        "children": [
+            ["Inventory", "package", "ProductsView"],
+            ["Add Product", "plus", "ProductsAddView"],
+            ["Categories", "shape", "ProductsCategoriesView"],
+            ["Suppliers", "truck", "SuppliersView"],
+            ["Import", "database-import", "ProductsImportView"],
+            ["Export", "database-export", "ProductsExportView"]
+        ],
+        "view": "ProductsView"
+    },
+    "Sales": {
+        "icon": "sale",
+        "children": [
+            ["Sales History", "history", "SalesHistoryView"],
+            ["Invoices", "file-document", "SalesInvoicesView"],
+            ["New Sale", "cart-plus", "SalesNewSaleView"],
+            ["Returns", "keyboard-return", "SalesReturnsView"]
+        ],
+        "view": "SalesView"
+    },
+    "Accounts": {
+        "icon": "account",
+        "children": [
+            ["Staff", "account-tie", "StaffAccountsView"],
+            ["Customers", "account-group", "CustomerAccountsView"],
+            ["Roles", "shield-account", "AccountsRolesView"],
+            ["Permissions", "key", "AccountsPermissionsView"]
+        ],
+        "view": "AccountsView"
+    },
+    "Settings": {
+        "icon": "cog",
+        "children": [
+            ["General", "cog", "GeneralSettingsView"],
+            ["Payment Methods", "credit-card", "PaymentSettingsView"],
+            ["Taxes", "percent", "TaxesSettingsView"],
+            ["Backup", "database", "BackupSettingsView"],
+            ["Store Info", "store", "StoreInfoView"]
+        ],
+        "view": "SettingsView"
+    },
+    "Help": {
+        "icon": "help-circle",
+        "children": [],
+        "view": "HelpView"
+    }
+}
