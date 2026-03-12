@@ -1,0 +1,70 @@
+/* Sidebar (clean single-source rules) */
+.sidebar {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(26,32,44,0.06);
+  padding: 18px 12px;
+  margin: 0;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Outer wrapper (admin container) should be transparent — no double card */
+.admin-sidebar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Menu */
+.sidebar-menu { list-style: none; margin: 0; padding: 0; }
+.sidebar-menu li { margin-bottom: 6px; }
+
+.sidebar-menu a {
+  display: block;
+  padding: 10px;
+  color: var(--text-color);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+  font-size: 14px;
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* icon / label */
+.sidebar-menu .menu-icon { display: inline-flex; width: 28px; text-align: center; margin-right: 10px; font-size: 18px; vertical-align: middle; }
+.sidebar-menu .menu-label { display: inline-block; vertical-align: middle; }
+
+/* Medium screens: compact column but keep card only on .sidebar (no extra border) */
+@media (min-width: 600px) and (max-width: 900px) {
+  .sidebar { padding: 12px; }
+  .admin-sidebar { flex: 0 0 96px; min-width: 96px; }
+  .sidebar-menu a { display:flex; flex-direction:column; align-items:center; padding:10px 6px; text-align:center; }
+  .sidebar-menu .menu-icon { margin-right:0; font-size:22px; }
+  .sidebar-menu .menu-label { font-size:13px; }
+}
+
+/* Small screens: hide labels and keep compact */
+@media (max-width: 600px) {
+  .sidebar { padding: 10px; }
+  .admin-sidebar { flex: 0 0 72px; min-width: 72px; }
+  .sidebar-menu a { padding: 10px 8px; text-align:center; }
+  .sidebar-menu .menu-label {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+  .sidebar-header { display: none; }
+}

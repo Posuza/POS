@@ -1,0 +1,8 @@
+ext options (pick any):
+
+Show avatar fallback when no profile image.
+Persist login (localStorage / file).
+Connect POS to the database (replace SAMPLE_* with queries).
+Clean up remaining compiler warnings and unused imports.
+Polish styles (spacing, mobile layout, colors).
+Want me to implement any of the above now? If yes, which one?

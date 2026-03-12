@@ -1,0 +1,15 @@
+/* Tables */
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  background-color: var(--bg-color);
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+td { padding: 12px; border-bottom: 1px solid var(--border-color); }
+
+tr:hover { background-color: rgba(37, 99, 235, 0.05); }

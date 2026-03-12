@@ -1,0 +1,50 @@
+[package]
+name = "pos-scanner"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+# Desktop UI
+dioxus = { version = "0.5", features = ["desktop"] }
+dioxus-router = "0.5"
+
+# Local database (SQLite)
+sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "sqlite", "migrate"] }
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Password hashing
+bcrypt = "0.15"
+
+# Auth
+jsonwebtoken = "9.0"
+
+# 📸 IMAGE HANDLING
+image = "0.24"              # Image processing
+base64 = "0.21"             # Base64 encoding for images
+sha2 = "0.10"               # File hashing
+
+# Desktop features
+rfd = "0.12"                # File dialogs (for image upload)
+enigo = "0.1"
+gloo-timers = { version = "0.2", features = ["futures"] }  # Async timer for messages
+
+# Utilities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+log = "0.4"
+env_logger = "0.10"
+dotenv = "0.15"
+
+# Printing
+printpdf = "0.7"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

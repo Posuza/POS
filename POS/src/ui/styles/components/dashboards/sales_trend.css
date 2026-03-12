@@ -1,0 +1,66 @@
+/* Styles for SalesTrend component */
+.sales-trend { }
+.sales-trend .sales-chart {
+  width: 100%;
+  height: auto; /* keeps aspect ratio responsive */
+  display: block;
+}
+.sales-trend .chart-legend { font-size: 11px; fill: var(--muted-color); }
+.sales-trend .chart-legend-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  width: 100%; /* default full width when stacked above chart */
+  margin-bottom: 8px;
+}
+.sales-trend .chart-legend-wrapper { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
+.sales-trend .chart-legend-entry { flex: 0 1 auto; display: inline-flex; align-items: center; gap: 8px; }
+
+/* Stronger rules to prevent external styles from forcing vertical stacking */
+.sales-trend .chart-legend-wrapper { display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; justify-content: flex-start !important; align-items: center !important; }
+.sales-trend .chart-legend-wrapper > * { display: inline-flex !important; flex: 0 1 auto !important; width: auto !important; }
+.sales-trend .chart-legend-entry { width: auto !important; }
+.sales-trend .chart-legend-label { font-size: 11px; color: var(--muted-color); font-weight: 500; }
+
+.sales-trend .chart-row { display: block; }
+.sales-trend .sales-chart { width: 100%; }
+.sales-trend .chart-marker { transition: r 120ms ease; }
+
+/* Legend entry spacing for dynamic legend */
+.sales-trend .chart-legend g > g > g { cursor: default; }
+.sales-trend .chart-legend text { font-family: inherit; font-weight: 500; }
+
+/* Rotate x-labels a touch more on smaller screens */
+.sales-trend svg text {
+  /* leave most styling to the SVG; ensure rotated labels don't overflow */
+  vector-effect: non-scaling-stroke;
+}
+
+/* vertical gridlines style */
+.sales-trend .sales-chart line[stroke="#f3f5f7"] {
+  opacity: 1;
+}
+
+/* slightly smaller x-labels for rotated text */
+.sales-trend svg text[font-size="10"] { font-size: 10px; }
+
+.sales-trend .chart-tooltip text { font-weight: 600; }
+.sales-trend .chart-tooltip rect { opacity: 0.95; }
+
+/* Make the chart slightly shorter on very small screens */
+@media (max-width: 420px) {
+  .sales-trend .sales-chart { height: 120px; }
+  .sales-trend h3 { font-size: 14px; }
+}
+
+@media (min-width: 700px) {
+  .sales-trend .chart-legend { font-size: 13px; }
+  /* on wider screens show legend and chart in a row */
+  .sales-trend .chart-row { display: flex; gap: 20px; align-items: flex-start; }
+  .sales-trend .chart-legend-wrapper { width: 40%; flex: 0 0 40%; }
+  .sales-trend .sales-chart { flex: 1 1 auto; }
+  /* ensure legend entries lay out horizontally and wrap inside the legend column */
+  .sales-trend .chart-legend-wrapper { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
+  .sales-trend .chart-legend-entry { min-width: 90px; flex: 0 1 auto; }
+}

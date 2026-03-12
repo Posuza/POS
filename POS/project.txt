@@ -1,0 +1,58 @@
+/Users/user/Desktop/rust/POS/
+├── Cargo.toml              # All dependencies
+├── src/
+│   ├── main.rs            # Desktop app entry
+│   ├── lib.rs             # Shared code
+│   │
+│   ├── pages/             # Dioxus pages
+│   │   ├── mod.rs
+│   │   ├── login.rs       # Login UI
+│   │   ├── pos.rs         # Scanner UI (Staff)
+│   │   ├── admin.rs       # Admin Dashboard
+│   │   └── settings.rs
+│   │
+│   ├── components/        # UI Components
+│   │   ├── mod.rs
+│   │   ├── navbar.rs
+│   │   ├── sidebar.rs
+│   │   └── product_card.rs
+│   │
+│   ├── models/            # Data structures
+│   │   ├── mod.rs
+│   │   ├── user.rs
+│   │   ├── product.rs
+│   │   └── scan.rs
+│   │
+│   ├── db/                # LOCAL SQLite Database
+│   │   ├── mod.rs
+│   │   ├── connection.rs  # DB setup
+│   │   ├── users.rs       # User queries
+│   │   ├── products.rs    # Product queries
+│   │   └── scans.rs       # Scan queries
+│   │
+│   ├── services/          # Business logic
+│   │   ├── mod.rs
+│   │   ├── auth.rs        # Login/logout
+│   │   ├── scanner.rs     # Scan logic
+│   │   └── printer.rs     # Print logic
+│   │
+│   ├── hooks/             # Dioxus hooks
+│   │   ├── mod.rs
+│   │   ├── use_auth.rs
+│   │   └── use_products.rs
+│   │
+│   ├── utils/
+│   │   ├── mod.rs
+│   │   └── constants.rs
+│   │
+│   └── styles/
+│       ├── main.css
+│       ├── login.css
+│       ├── dashboard.css
+│       └── components.css
+│
+├── assets/
+│   ├── logo.png
+│   └── icon.ico
+│
+└── schema.sql             # SQLite schema

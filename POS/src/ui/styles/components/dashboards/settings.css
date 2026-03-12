@@ -1,0 +1,12 @@
+/* Settings / CSS variables */
+:root {
+  --primary-color: #2563eb;
+  --secondary-color: #1e40af;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --text-color: #1f2937;
+  --bg-color: #f9fafb;
+  --border-color: #e5e7eb;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+}

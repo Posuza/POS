@@ -1,0 +1,136 @@
+/* Navbar component styles (moved out of main.css) */
+
+.navbar {
+  background-color: white;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 16px;
+  box-shadow: var(--shadow);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 9999;
+  min-height: 60px;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.navbar-menu {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+
+.navbar-menu a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.navbar-menu a:hover {
+  color: var(--primary-color);
+}
+
+/* Responsive navbar layout: left (login), center (brand), right (user+avatar) */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+}
+.navbar-left {
+  display: flex;
+  align-items: center;
+  min-width: 80px;
+}
+.navbar-center {
+  flex: 1 1 auto;
+  text-align: center;
+}
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Center the brand in the viewport */
+.navbar-brand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  font-size: 22px;
+}
+
+/* Right-most profile container outside the centered .container */
+.navbar-right-outer {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* Left-most icon container */
+.navbar-icon-left {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+}
+/* Logo image in the left slot */
+.navbar-icon-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+.navbar-user {
+  font-weight: 600;
+  color: inherit;
+}
+.navbar-user-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.navbar-avatar-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-color, #667eea);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .navbar-center { display: none; }
+  .navbar { padding: 8px; }
+  .navbar-user { display: none; }
+  .navbar-user-img { width: 28px; height: 28px; }
+}
