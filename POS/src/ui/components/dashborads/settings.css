@@ -2,11 +2,20 @@
 :root {
   --primary-color: #2563eb;
   --secondary-color: #1e40af;
+  --accent-color: #0ea5e9;
   --success-color: #10b981;
   --danger-color: #ef4444;
   --warning-color: #f59e0b;
+  --muted-color: #64748b;
   --text-color: #1f2937;
   --bg-color: #f9fafb;
+  --bg-muted: #f1f5f9;
+  --bg-quiet: #f8fafc;
   --border-color: #e5e7eb;
   --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --shadow-strong: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
 }

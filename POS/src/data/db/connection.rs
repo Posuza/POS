@@ -2,13 +2,14 @@
 
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::path::Path;
+use crate::config::settings::get_settings;
 
 pub async fn init_db() -> Result<SqlitePool, sqlx::Error> {
     // Create/connect to local SQLite database
-    let db_path = "pos_data.db";
+    let db_path = get_settings().database_path;
     
     // Create database file if it doesn't exist
-    if !Path::new(db_path).exists() {
+    if !Path::new(&db_path).exists() {
         println!("📁 Creating new database: {}", db_path);
     }
     
@@ -29,5 +30,5 @@ pub async fn init_db() -> Result<SqlitePool, sqlx::Error> {
 }
 
 pub fn get_db_path() -> String {
-    "pos_data.db".to_string()
+    get_settings().database_path
 }

@@ -40,6 +40,8 @@ fn deterministic_color(name: &str) -> String {
 fn series_color(name: &str) -> String {
     let lname = name.to_lowercase();
     if lname.contains("sales") { "#2563eb".to_string() }
+    else if lname.contains("items") || lname.contains("item") { "#7c3aed".to_string() }
+    else if lname.contains("ticket") { "#0ea5a4".to_string() }
     else if lname.contains("stock") { "#10b981".to_string() }
     else if lname.contains("user") || lname.contains("users") { "#f59e0b".to_string() }
     else { deterministic_color(name) }
@@ -81,6 +83,22 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
     for (name, _s) in series.iter() {
         stroke_colors.push(series_color(name));
     }
+    let area_color = stroke_colors.get(0).cloned().unwrap_or_else(|| "#2563eb".to_string());
+    let area_path = all_coords.get(0).and_then(|coords| {
+        if coords.is_empty() {
+            None
+        } else {
+            let mut d = format!("M{:.1},{:.1}", coords[0].0, coords[0].1);
+            for (x, y) in coords.iter().skip(1) {
+                d.push_str(&format!(" L{:.1},{:.1}", x, y));
+            }
+            let last_x = coords.last().unwrap().0;
+            let first_x = coords[0].0;
+            let bottom = height - pad;
+            d.push_str(&format!(" L{:.1},{:.1} L{:.1},{:.1} Z", last_x, bottom, first_x, bottom));
+            Some(d)
+        }
+    });
     // latest value for first series shown on top-right
     let latest = series.get(0).and_then(|(_name, s)| s.last()).cloned().unwrap_or(0.0);
     let latest_s = format!("{:.2}", latest);
@@ -156,9 +174,7 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
     }
 
     rsx! {
-        div { class: "content-card sales-trend",
-            h3 { "📈 Sales Trend (Today)" }
-
+        div { class: "sales-trend",
             div { class: "chart-row",
                 /* Legend (wraps) */
                 div { class: "chart-legend-wrapper",
@@ -177,6 +193,12 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
 
                 /* Chart area */
                 svg { class: "sales-chart", width: "100%", view_box: "{view_box}", preserve_aspect_ratio: "xMinYMid meet",
+                    defs {
+                        linearGradient { id: "sales-area-gradient", x1: "0", x2: "0", y1: "0", y2: "1",
+                            stop { offset: "0%", stop_color: "{area_color}", stop_opacity: "0.28" }
+                            stop { offset: "100%", stop_color: "{area_color}", stop_opacity: "0.02" }
+                        }
+                    }
                     { y_ticks_s.iter().map(|(lbl, ypos)| rsx!( g { line { x1: "{pad_s}", y1: "{ypos}", x2: "{width_minus_pad_s}", y2: "{ypos}", stroke: "#eef2f5", stroke_width: "1" } text { x: "{pad_minus_8_s}", y: "{ypos}", font_size: "9", text_anchor: "end", fill: "var(--muted-color)", "{lbl}" } } )) }
 
                     { vertical_xs.iter().map(|xpos| rsx!( line { x1: "{xpos}", x2: "{xpos}", y1: "{pad_s}", y2: "{height_minus_pad_s}", stroke: "#f3f5f7", stroke_width: "1" } )) }
@@ -186,9 +208,13 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
                     line { x1: "{pad_s}", y1: "{pad}", x2: "{pad_s}", y2: "{height - pad}", stroke: "#e6e9ee", stroke_width: "1" }
                     line { x1: "{pad_s}", y1: "{height - pad}", x2: "{width_minus_pad_s}", y2: "{height - pad}", stroke: "#e6e9ee", stroke_width: "1" }
 
+                    { area_path.as_ref().map(|d| rsx!( path { d: "{d}", fill: "url(#sales-area-gradient)", stroke: "none" } )) }
+
                     { all_paths.iter().enumerate().map(|(si,d)| {
                         let stroke_color = stroke_colors.get(si).cloned().unwrap_or_else(|| "var(--primary-color)".to_string());
-                        rsx!( path { d: "{d}", fill: "none", stroke: "{stroke_color}", stroke_width: "2.5", stroke_linecap: "round", stroke_linejoin: "round" } )
+                        let stroke_width = if si == 0 { "3.0" } else { "2.0" };
+                        let dash = if si == 0 { "0" } else { "4 4" };
+                        rsx!( path { d: "{d}", fill: "none", stroke: "{stroke_color}", stroke_width: "{stroke_width}", stroke_linecap: "round", stroke_linejoin: "round", stroke_dasharray: "{dash}" } )
                     }) }
 
                     { all_coords.iter().enumerate().flat_map(|(si,coords)| {

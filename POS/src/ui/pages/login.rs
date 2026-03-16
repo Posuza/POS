@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 use dioxus::events::Key;
 use crate::data::models::user::{User, UserRole};
+use crate::data::json_store::get_store;
 
 #[component]
 pub fn LoginPage(
@@ -13,24 +14,39 @@ pub fn LoginPage(
     let mut is_loading = use_signal(|| false);
     
     let mut handle_login = move |_| {
-        if username.read().is_empty() || password.read().is_empty() {
-            error.set(Some("Please fill all fields".to_string()));
+        if username.read().is_empty() {
+            error.set(Some("Please enter a username".to_string()));
             return;
         }
         
         is_loading.set(true);
         error.set(None);
         
-        // In a real app, you'd verify credentials with the database
-        let user = User {
-            id: "user123".to_string(),
-            username: username.read().clone(),
-            email: format!("{}@pos.local", username.read()),
-            role: selected_role.read().clone(),
-            status: "active".to_string(),
-            profile_image: None,
-            profile_image_type: None,
+        let store = get_store();
+        let username_value = username.read().clone();
+
+        let user_record = match store.find_user_by_username(&username_value) {
+            Some(u) => u,
+            None => {
+                is_loading.set(false);
+                error.set(Some("User not found".to_string()));
+                return;
+            }
         };
+
+        if user_record.status != "active" {
+            is_loading.set(false);
+            error.set(Some("User is inactive".to_string()));
+            return;
+        }
+
+        if *selected_role.read() != user_record.role {
+            is_loading.set(false);
+            error.set(Some("Selected role does not match user role".to_string()));
+            return;
+        }
+
+        let user = user_record.to_user();
         
         is_loading.set(false);
         // Debug: print login attempt

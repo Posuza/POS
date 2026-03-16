@@ -10,6 +10,10 @@ use ui::pages::{LoginPage, AdminPage, POSPage};
 use data::models::user::{User, UserRole};
 
 fn main() {
+    if let Err(err) = data::init_json() {
+        eprintln!("Failed to initialize JSON data store: {err}");
+    }
+
     // Use dioxus launch entrypoint
     dioxus::launch(App);
 }

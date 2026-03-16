@@ -4,6 +4,9 @@
 pub const DATABASE_FILE: &str = "data/pos_data.db";
 pub const DATABASE_URL: &str = "sqlite://data/pos_data.db";
 
+// JSON data
+pub const JSON_DATA_DIR: &str = "data/json";
+
 // Image storage
 pub const IMAGES_DIR: &str = "data/images";
 pub const PRODUCTS_IMAGES_DIR: &str = "data/images/products";

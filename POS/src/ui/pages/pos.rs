@@ -3,14 +3,9 @@ use crate::data::models::user::User;
 use crate::ui::components::Navbar;
 use crate::config::constants::APP_NAME;
 use crate::utils::formatters::format_price;
-
-// small sample dataset for POS product quick-add
-const SAMPLE_PRODUCTS: &[(&str, &str, &str, f32, i32)] = &[
-    ("123456789012", "Apple", "Fruits", 1.5, 100),
-    ("123456789013", "Banana", "Fruits", 0.99, 150),
-    ("123456789014", "Milk", "Dairy", 2.99, 50),
-    ("123456789015", "Bread", "Bakery", 3.49, 75),
-];
+use crate::data::json_store::get_store;
+use crate::services::image_service::ImageService;
+use crate::config::constants::PRODUCTS_IMAGES_DIR;
 
 #[component]
 pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
@@ -25,6 +20,7 @@ pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
     let mut show_cart_mobile = use_signal(|| false);
     // snapshot for rendering to avoid simultaneous immutable/mutable borrows in RSX
     let cart_open = *show_cart_mobile.read();
+    let store = get_store();
 
     let handle_scan = move |_: Event<dioxus::events::MouseData>| {
         let barcode = {
@@ -35,33 +31,28 @@ pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
             b.clone()
         };
 
-        // Simulate product lookup with proper image handling
-        let product = match barcode.as_str() {
-            "123456789012" =>
-                Some((
-                    "Apple",
-                    1.5,
-                    "data:image/emoji;base64,🍎", // In real app, load from data/images/products/
-                )),
-            "123456789013" => Some(("Banana", 0.99, "data:image/emoji;base64,🍌")),
-            "123456789014" => Some(("Milk", 2.99, "data:image/emoji;base64,🥛")),
-            "123456789015" => Some(("Bread", 3.49, "data:image/emoji;base64,🍞")),
-            _ => None,
-        };
+        let product = store.find_product_by_barcode(&barcode);
 
-        if let Some((name, price, image_url)) = product {
+        if let Some(product) = product {
+            let image_url = match (&product.product_image, &product.product_image_type) {
+                (Some(img), Some(img_type)) if img.starts_with("data:") => Some(img.clone()),
+                (Some(img), Some(img_type)) => {
+                    ImageService::get_image_data_url(img, img_type, PRODUCTS_IMAGES_DIR).ok()
+                }
+                _ => None,
+            };
             // add or increment item in cart
             let mut c = cart.write();
-            if let Some(pos) = c.iter().position(|it| it.0 == name) {
+            if let Some(pos) = c.iter().position(|it| it.0 == product.name) {
                 c[pos].2 += 1;
             } else {
-                c.push((name.to_string(), price, 1));
+                c.push((product.name.clone(), product.price, 1));
             }
-            current_product_image.set(Some(image_url.to_string()));
+            current_product_image.set(image_url);
 
-            let new_total: f32 = *total.read() + price;
+            let new_total: f32 = *total.read() + product.price;
             total.set(new_total);
-            message.set(Some(format!("✅ {} added!", name)));
+            message.set(Some(format!("✅ {} added!", product.name)));
 
             // Clear message after 2 seconds
             spawn(async move {
@@ -138,23 +129,23 @@ pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
                         div { class: "product-list",
                             h4 { "Quick Add" }
                             ul {
-                                { SAMPLE_PRODUCTS.iter().map(|p| rsx!{
-                                    li { key: "{p.0}", class: "product-row",
+                                { store.products.iter().take(4).map(|p| rsx!{
+                                    li { key: "{p.barcode}", class: "product-row",
                                         div { class: "product-row-left",
-                                            span { class: "product-name", "{p.1}" }
-                                            span { class: "product-cat", "{p.2}" }
+                                            span { class: "product-name", "{p.name}" }
+                                            span { class: "product-cat", "{p.category}" }
                                         }
                                         div { class: "product-row-right",
-                                            span { class: "product-price", "{format_price(p.3)}" }
+                                            span { class: "product-price", "{format_price(p.price)}" }
                                             button { class: "btn btn-secondary", onclick: move |_| {
                                                 let mut c = cart.write();
-                                                if let Some(pos) = c.iter().position(|it| it.0 == p.1) {
+                                                if let Some(pos) = c.iter().position(|it| it.0 == p.name) {
                                                     c[pos].2 += 1;
                                                 } else {
-                                                    c.push((p.1.to_string(), p.3, 1));
+                                                    c.push((p.name.clone(), p.price, 1));
                                                 }
                                                 let current_total: f32 = *total.read();
-                                                total.set(current_total + p.3);
+                                                total.set(current_total + p.price);
                                             }, "Add" }
                                         }
                                     }

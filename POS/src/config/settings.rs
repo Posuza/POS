@@ -8,6 +8,9 @@ pub struct AppSettings {
     /// Database file path
     pub database_path: String,
     
+    /// JSON data directory path
+    pub json_data_path: String,
+
     /// Images directory path
     pub images_path: String,
     
@@ -22,6 +25,7 @@ impl Default for AppSettings {
     fn default() -> Self {
         AppSettings {
             database_path: "data/pos_data.db".to_string(),
+            json_data_path: "data/json".to_string(),
             images_path: "data/images".to_string(),
             log_level: "info".to_string(),
             environment: "production".to_string(),
@@ -41,6 +45,10 @@ impl AppSettings {
         
         if let Ok(db_path) = std::env::var("DATABASE_PATH") {
             settings.database_path = db_path;
+        }
+
+        if let Ok(json_path) = std::env::var("JSON_DATA_PATH") {
+            settings.json_data_path = json_path;
         }
         
         if let Ok(img_path) = std::env::var("IMAGES_PATH") {

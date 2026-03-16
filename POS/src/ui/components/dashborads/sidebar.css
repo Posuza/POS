@@ -1,0 +1,67 @@
+/* Sidebar (clean single-source rules) */
+.sidebar {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(26,32,44,0.06);
+  padding: base-(18px 12px) lg-(12px) sm-(10px);
+  margin: 0;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Outer wrapper (admin container) should be transparent — no double card */
+.admin-sidebar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: lg-(0 0 96px) sm-(0 0 72px);
+  min-width: lg-(96px) sm-(72px);
+}
+
+/* Menu */
+.sidebar-menu { list-style: none; margin: 0; padding: 0; }
+.sidebar-menu li { margin-bottom: 6px; }
+
+.sidebar-menu a {
+  display: base-(block) lg-(flex);
+  flex-direction: lg-(column);
+  align-items: lg-(center);
+  padding: base-(10px) lg-(10px 6px) sm-(10px 8px);
+  color: var(--text-color);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+  font-size: 14px;
+  text-align: lg-(center) sm-(center);
+}
+
+.sidebar-menu a:hover,
+.sidebar-menu a.active {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* icon / label */
+.sidebar-menu .menu-icon {
+  display: inline-flex;
+  width: 28px;
+  text-align: center;
+  margin-right: base-(10px) lg-(0);
+  font-size: base-(18px) lg-(22px);
+  vertical-align: middle;
+}
+.sidebar-menu .menu-label {
+  display: base-(inline-block) sm-(none);
+  vertical-align: middle;
+  font-size: lg-(13px);
+  visibility: sm-(hidden);
+  width: sm-(0);
+  height: sm-(0);
+  margin: sm-(0);
+  padding: sm-(0);
+  overflow: sm-(hidden);
+}
+.sidebar-header { display: sm-(none); }
