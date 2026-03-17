@@ -127,11 +127,12 @@ The admin UI now mirrors the reference design language and includes the full set
 
 ## UI Asset Coverage (2026-03-17)
 Legend: ✅ implemented, 🔶 partially implemented, ❌ missing, ⏭️ out of admin scope.
+Status note: As of 2026-03-17, all missing/partial admin UI features listed in this report have been implemented with persistence, validation, and refresh behavior. Some non-admin POS/branding assets remain out of scope.
 
 | Asset | Mapped UI | Status | Notes |
 | --- | --- | --- | --- |
 | Dashboard.jpg | Dashboard | ✅ | Matches `dashboard-v2` layout. |
-| Sales Dashboard.jpg | Sales dashboard | 🔶 | No dedicated sales dashboard page; covered by Dashboard + Sales tab. |
+| Sales Dashboard.jpg | Sales dashboard | ✅ | Dedicated Sales Dashboard tab now implemented. |
 | Sales Report.jpg | Sales Report | ✅ | Report table + filters. |
 | Purchase Report.svg | Purchase Report | ✅ | Report table + filters. |
 | Inventory Report.jpg | Inventory Report | ✅ | Report table + filters. |
@@ -140,7 +141,7 @@ Legend: ✅ implemented, 🔶 partially implemented, ❌ missing, ⏭️ out of 
 | Customer Report  - Customer Report.svg | Customer Report | ✅ | Report table + filters. |
 | Product Report - Product Report.svg | Product Report | ✅ | Report table + filters. |
 | Products.jpg | Products | ✅ | List, edit, export. |
-| Create - Single Product.jpg | Create Product | 🔶 | UI only; no persistence wiring. |
+| Create - Single Product.jpg | Create Product | ✅ | Create form persists to `products.json`. |
 | Expired Products.png | Expired Products | ✅ | List + filters. |
 | Low Stocks.png | Low Stocks | ✅ | List + filters. |
 | Category.png | Category | ✅ | CRUD UI + JSON persistence. |
@@ -159,9 +160,9 @@ Legend: ✅ implemented, 🔶 partially implemented, ❌ missing, ⏭️ out of 
 | Stock Transfer.png | Stock Transfer | ✅ | Stock transfer UI. |
 | Customers.jpg | Customers | ✅ | List + insights + export. |
 | Customers Overview.svg | Customers overview | ✅ | Covered by Customers insights card. |
-| Add Customer.png | Add Customer | ❌ | No create customer form yet. |
-| Suppliers.jpg | Suppliers | 🔶 | Directory only, no edit/create. |
-| Super Admin Dashboard.png | Super Admin | 🔶 | UI present; controls static. |
+| Add Customer.png | Add Customer | ✅ | Customer create form + persistence added. |
+| Suppliers.jpg | Suppliers | ✅ | CRUD + persistence implemented. |
+| Super Admin Dashboard.png | Super Admin | ✅ | Actions wired to JSON persistence. |
 | Companies Card.svg | Dashboard cards | ✅ | Summary card patterns present. |
 | Financial Summary Cards.svg | Dashboard cards | ✅ | Summary card patterns present. |
 | Summary Cards.svg | Dashboard cards | ✅ | Summary card patterns present. |

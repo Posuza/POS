@@ -1,14 +1,19 @@
 use dioxus::prelude::*;
 use crate::data::models::user::User;
 use crate::data::models::product::Product;
-use crate::data::json_store::get_store;
+use crate::data::json_store::get_store_fresh;
 use crate::utils::formatters::{format_price, format_datetime};
 use crate::ui::components::{Navbar, SalesTrend};
 use crate::config::constants::APP_NAME;
+use crate::config::constants::{PRODUCTS_IMAGES_DIR, PROFILES_IMAGES_DIR};
 use crate::config::settings::get_settings;
+use crate::services::image_service::ImageService;
 use std::time::Duration;
 use std::collections::HashMap;
+use std::path::Path;
 use serde_json::json;
+use serde::de::DeserializeOwned;
+use base64::Engine;
 use chrono::Utc;
 use uuid::Uuid;
 
@@ -67,7 +72,7 @@ pub fn AdminPage(user: User, on_logout: EventHandler<()>) -> Element {
                     div { class: "admin-main",
                         {
                     let (tab_label, tab_subtitle) = tab_metadata(*active_tab.read());
-                    let store = get_store();
+                    let store = get_store_fresh();
                     let last_updated = store.sales
                         .last()
                         .map(|s| format_datetime(&s.created_at))
@@ -384,11 +389,62 @@ fn tab_metadata(tab: AdminTab) -> (&'static str, &'static str) {
 
 // `SidebarMenu` renders the floating admin drawer entries directly.
 
-fn extra_list<'a>(store: &'a crate::data::json_store::JsonStore, key: &str) -> Vec<&'a serde_json::Value> {
-    match store.extras.get(key) {
-        Some(serde_json::Value::Array(items)) => items.iter().collect(),
-        _ => Vec::new(),
+fn load_vec_from_json<T: DeserializeOwned>(key: &str) -> Vec<T> {
+    let settings = get_settings();
+    let path = std::path::PathBuf::from(settings.json_data_path).join(key);
+    let Ok(contents) = std::fs::read_to_string(&path) else {
+        return Vec::new();
+    };
+    serde_json::from_str(&contents).unwrap_or_default()
+}
+
+fn extra_list(key: &str) -> Vec<serde_json::Value> {
+    load_vec_from_json(key)
+}
+
+fn is_valid_email(email: &str) -> bool {
+    let email = email.trim();
+    if email.is_empty() {
+        return true;
     }
+    let parts: Vec<&str> = email.split('@').collect();
+    if parts.len() != 2 {
+        return false;
+    }
+    let domain = parts[1];
+    domain.contains('.') && !domain.starts_with('.') && !domain.ends_with('.')
+}
+
+fn load_image_from_path(path: &str) -> Result<(String, String, String), String> {
+    let ext = Path::new(path)
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|s| s.to_lowercase())
+        .ok_or_else(|| "Unsupported image type".to_string())?;
+    let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
+    let payload = base64::engine::general_purpose::STANDARD.encode(&bytes);
+    let data_url = format!("data:image/{};base64,{}", ext, payload);
+    Ok((payload, ext, data_url))
+}
+
+fn infer_image_type_from_filename(name: &str) -> Option<String> {
+    Path::new(name)
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|s| s.to_lowercase())
+}
+
+fn image_preview_from_filename(name: &str, image_type: &Option<String>, folder: &str) -> Option<String> {
+    if name.starts_with("data:") {
+        return Some(name.to_string());
+    }
+    let resolved = image_type
+        .clone()
+        .or_else(|| infer_image_type_from_filename(name));
+    let Some(img_type) = resolved else {
+        return None;
+    };
+    ImageService::get_image_data_url(name, &img_type, folder).ok()
 }
 
 fn value_string(value: &serde_json::Value, key: &str) -> Option<String> {
@@ -598,18 +654,18 @@ fn value_is(value: &serde_json::Value, key: &str, expected: &str) -> bool {
 
 #[component]
 fn DashboardTab(user: User) -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let products = &store.products;
     let sales = &store.sales;
     let users = &store.users;
-    let sale_items = extra_list(store, "sale_items.json");
-    let customers = extra_list(store, "customers.json");
-    let payments = extra_list(store, "payments.json");
-    let suppliers = extra_list(store, "suppliers.json");
-    let shifts = extra_list(store, "shifts.json");
-    let roles = extra_list(store, "roles.json");
-    let permissions = extra_list(store, "permissions.json");
-    let movements = extra_list(store, "inventory_movements.json");
+    let sale_items = extra_list("sale_items.json");
+    let customers = extra_list("customers.json");
+    let payments = extra_list("payments.json");
+    let suppliers = extra_list("suppliers.json");
+    let shifts = extra_list("shifts.json");
+    let roles = extra_list("roles.json");
+    let permissions = extra_list("permissions.json");
+    let movements = extra_list("inventory_movements.json");
 
     // compute summary stats from JSON data
     let total_products = products.len();
@@ -1174,11 +1230,11 @@ fn RowActions() -> Element {
 
 #[component]
 fn SalesDashboardTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let sales = &store.sales;
-    let sale_items = extra_list(store, "sale_items.json");
-    let customers = extra_list(store, "customers.json");
-    let payments = extra_list(store, "payments.json");
+    let sale_items = extra_list("sale_items.json");
+    let customers = extra_list("customers.json");
+    let payments = extra_list("payments.json");
     let products = &store.products;
 
     let total_transactions = sales.len();
@@ -1434,14 +1490,19 @@ fn ProductsTab() -> Element {
     let mut product_category = use_signal(|| String::new());
     let mut product_price = use_signal(|| String::new());
     let mut product_stock = use_signal(|| String::new());
-    let mut product_image = use_signal(|| None::<String>);
+    let mut product_image_preview = use_signal(|| None::<String>);
+    let mut product_image_payload = use_signal(|| None::<String>);
+    let mut product_image_type = use_signal(|| None::<String>);
     let mut edit_product_name = use_signal(|| String::new());
     let mut edit_product_barcode = use_signal(|| String::new());
     let mut edit_product_category = use_signal(|| String::new());
     let mut edit_product_price = use_signal(|| String::new());
     let mut edit_product_stock = use_signal(|| String::new());
-    let mut edit_product_image = use_signal(|| None::<String>);
-    let store = get_store();
+    let mut edit_product_image_preview = use_signal(|| None::<String>);
+    let mut edit_product_image_payload = use_signal(|| None::<String>);
+    let mut edit_product_image_name = use_signal(|| None::<String>);
+    let mut edit_product_image_type = use_signal(|| None::<String>);
+    let store = get_store_fresh();
     let mut products_state = use_signal(|| store.products.clone());
     let mut edit_save_msg = use_signal(|| false);
     let mut edit_error = use_signal(|| None::<String>);
@@ -1489,15 +1550,47 @@ fn ProductsTab() -> Element {
         let mut product_category = product_category.clone();
         let mut product_price = product_price.clone();
         let mut product_stock = product_stock.clone();
-        let mut product_image = product_image.clone();
+        let mut product_image_preview = product_image_preview.clone();
+        let mut product_image_payload = product_image_payload.clone();
+        let mut product_image_type = product_image_type.clone();
         move |_| {
             if product_name.read().is_empty() || product_barcode.read().is_empty() {
                 add_error.set(Some("Product name and barcode are required.".to_string()));
                 return;
             }
-            let price = product_price.read().parse::<f32>().ok().unwrap_or(0.0);
-            let stock = product_stock.read().parse::<i32>().ok().unwrap_or(0);
+            let price = match product_price.read().parse::<f32>() {
+                Ok(v) if v >= 0.01 => v,
+                _ => {
+                    add_error.set(Some("Price must be at least 0.01.".to_string()));
+                    return;
+                }
+            };
+            let stock = match product_stock.read().parse::<i32>() {
+                Ok(v) if v >= 0 => v,
+                _ => {
+                    add_error.set(Some("Stock must be a non-negative integer.".to_string()));
+                    return;
+                }
+            };
             let mut updated = products_state.read().clone();
+            if updated.iter().any(|p| p.barcode == *product_barcode.read()) {
+                add_error.set(Some("A product with this barcode already exists.".to_string()));
+                return;
+            }
+            let mut image_filename: Option<String> = None;
+            let mut image_type: Option<String> = None;
+            if let (Some(payload), Some(img_type)) = (product_image_payload.read().clone(), product_image_type.read().clone()) {
+                match ImageService::save_product_image(&payload, &img_type) {
+                    Ok(filename) => {
+                        image_filename = Some(filename);
+                        image_type = Some(img_type);
+                    }
+                    Err(err) => {
+                        add_error.set(Some(format!("Image upload failed: {}", err)));
+                        return;
+                    }
+                }
+            }
             let now = now_iso();
             let product = Product {
                 id: new_id("prod"),
@@ -1507,8 +1600,8 @@ fn ProductsTab() -> Element {
                 price,
                 quantity: stock,
                 category: if product_category.read().is_empty() { "Uncategorized".to_string() } else { product_category.read().clone() },
-                product_image: product_image.read().clone(),
-                product_image_type: None,
+                product_image: image_filename,
+                product_image_type: image_type,
                 created_at: now.clone(),
                 updated_at: now,
             };
@@ -1523,7 +1616,9 @@ fn ProductsTab() -> Element {
                     product_category.set(String::new());
                     product_price.set(String::new());
                     product_stock.set(String::new());
-                    product_image.set(None);
+                    product_image_preview.set(None);
+                    product_image_payload.set(None);
+                    product_image_type.set(None);
                     show_add_modal.set(false);
                     spawn(async move {
                         sleep_ms(2_000).await;
@@ -1563,15 +1658,42 @@ fn ProductsTab() -> Element {
         }
         let price = price.unwrap_or(0.0);
         let stock = stock.unwrap_or(0);
+        if price < 0.01 {
+            edit_error.set(Some("Price must be at least 0.01.".to_string()));
+            return;
+        }
+        if stock < 0 {
+            edit_error.set(Some("Stock must be a non-negative integer.".to_string()));
+            return;
+        }
 
         let mut updated = products_state.read().clone();
+        if updated.iter().any(|p| p.barcode == *edit_product_barcode.read() && p.id != id) {
+            edit_error.set(Some("Another product already uses this barcode.".to_string()));
+            return;
+        }
+        let mut image_filename = edit_product_image_name.read().clone();
+        let mut image_type = edit_product_image_type.read().clone();
+        if let (Some(payload), Some(img_type)) = (edit_product_image_payload.read().clone(), edit_product_image_type.read().clone()) {
+            match ImageService::save_product_image(&payload, &img_type) {
+                Ok(filename) => {
+                    image_filename = Some(filename);
+                    image_type = Some(img_type);
+                }
+                Err(err) => {
+                    edit_error.set(Some(format!("Image upload failed: {}", err)));
+                    return;
+                }
+            }
+        }
         if let Some(p) = updated.iter_mut().find(|p| p.id == id) {
             p.name = edit_product_name.read().clone();
             p.barcode = edit_product_barcode.read().clone();
             p.category = edit_product_category.read().clone();
             p.price = price;
             p.quantity = stock;
-            p.product_image = edit_product_image.read().clone();
+            p.product_image = image_filename;
+            p.product_image_type = image_type;
         } else {
             edit_error.set(Some("Product not found for update.".to_string()));
             return;
@@ -1647,14 +1769,18 @@ fn ProductsTab() -> Element {
         let pcategory = p.category.clone();
         let pprice = p.price;
         let pqty = p.quantity;
-        let pimage = p.product_image.clone();
+        let pimage_name = p.product_image.clone();
+        let pimage_type = p.product_image_type.clone();
         let mut edit_product_id = edit_product_id.clone();
         let mut edit_product_name = edit_product_name.clone();
         let mut edit_product_barcode = edit_product_barcode.clone();
         let mut edit_product_category = edit_product_category.clone();
         let mut edit_product_price = edit_product_price.clone();
         let mut edit_product_stock = edit_product_stock.clone();
-        let mut edit_product_image = edit_product_image.clone();
+        let mut edit_product_image_preview = edit_product_image_preview.clone();
+        let mut edit_product_image_payload = edit_product_image_payload.clone();
+        let mut edit_product_image_name = edit_product_image_name.clone();
+        let mut edit_product_image_type = edit_product_image_type.clone();
         let mut show_edit_modal = show_edit_modal.clone();
         let mut products_state = products_state.clone();
         let mut delete_msg = delete_msg.clone();
@@ -1678,7 +1804,13 @@ fn ProductsTab() -> Element {
                             edit_product_category.set(pcategory.clone());
                             edit_product_price.set(format!("{:.2}", pprice));
                             edit_product_stock.set(format!("{}", pqty));
-                            edit_product_image.set(pimage.clone());
+                            edit_product_image_name.set(pimage_name.clone());
+                            edit_product_image_type.set(pimage_type.clone());
+                            edit_product_image_payload.set(None);
+                            let preview = pimage_name
+                                .as_deref()
+                                .and_then(|name| image_preview_from_filename(name, &pimage_type, PRODUCTS_IMAGES_DIR));
+                            edit_product_image_preview.set(preview);
                             show_edit_modal.set(true);
                         },
                         "✏️ Edit"
@@ -1924,15 +2056,35 @@ fn ProductsTab() -> Element {
                             label { "Product Image" }
                             div { class: "file-input-wrapper",
                                 button { class: "btn btn-secondary", "📷 Choose Image" }
-                                input {
-                                    r#type: "file",
-                                    accept: "image/*",
-                                    onchange: move |_e| {
-                                        // In real app, handle file upload to data/images/products/
-                                    },
+                                { let mut product_image_payload = product_image_payload.clone();
+                                  let mut product_image_type = product_image_type.clone();
+                                  let mut product_image_preview = product_image_preview.clone();
+                                  let mut add_error = add_error.clone();
+                                  rsx!(
+                                    input {
+                                        r#type: "file",
+                                        accept: "image/*",
+                                        onchange: move |e| {
+                                            let path = e.value();
+                                            if path.is_empty() {
+                                                return;
+                                            }
+                                            match load_image_from_path(&path) {
+                                                Ok((payload, img_type, preview)) => {
+                                                    product_image_payload.set(Some(payload));
+                                                    product_image_type.set(Some(img_type));
+                                                    product_image_preview.set(Some(preview));
+                                                }
+                                                Err(err) => {
+                                                    add_error.set(Some(format!("Image load failed: {}", err)));
+                                                }
+                                            }
+                                        },
+                                    }
+                                  )
                                 }
                             }
-                            if let Some(img) = product_image.read().clone() {
+                            if let Some(img) = product_image_preview.read().clone() {
                                 div { class: "image-preview",
                                     img { src: "{img}" }
                                 }
@@ -2026,13 +2178,35 @@ fn ProductsTab() -> Element {
                             label { "Product Image" }
                             div { class: "file-input-wrapper",
                                 button { class: "btn btn-secondary", "📷 Choose Image" }
-                                input {
-                                    r#type: "file",
-                                    accept: "image/*",
-                                    onchange: move |_e| {},
+                                { let mut edit_product_image_payload = edit_product_image_payload.clone();
+                                  let mut edit_product_image_type = edit_product_image_type.clone();
+                                  let mut edit_product_image_preview = edit_product_image_preview.clone();
+                                  let mut edit_error = edit_error.clone();
+                                  rsx!(
+                                    input {
+                                        r#type: "file",
+                                        accept: "image/*",
+                                        onchange: move |e| {
+                                            let path = e.value();
+                                            if path.is_empty() {
+                                                return;
+                                            }
+                                            match load_image_from_path(&path) {
+                                                Ok((payload, img_type, preview)) => {
+                                                    edit_product_image_payload.set(Some(payload));
+                                                    edit_product_image_type.set(Some(img_type));
+                                                    edit_product_image_preview.set(Some(preview));
+                                                }
+                                                Err(err) => {
+                                                    edit_error.set(Some(format!("Image load failed: {}", err)));
+                                                }
+                                            }
+                                        },
+                                    }
+                                  )
                                 }
                             }
-                            if let Some(img) = edit_product_image.read().clone() {
+                            if let Some(img) = edit_product_image_preview.read().clone() {
                                 div { class: "image-preview",
                                     img { src: "{img}" }
                                 }
@@ -2171,11 +2345,11 @@ fn ProductsTab() -> Element {
 
 #[component]
 fn SuperAdminTab() -> Element {
-    let store = get_store();
-    let mut stores_state = use_signal(|| extra_list(store, "stores.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
-    let mut plans_state = use_signal(|| extra_list(store, "plans.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
-    let mut audits_state = use_signal(|| extra_list(store, "system_audits.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
-    let mut notifications_state = use_signal(|| extra_list(store, "global_notifications.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
+    let store = get_store_fresh();
+    let mut stores_state = use_signal(|| extra_list("stores.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
+    let mut plans_state = use_signal(|| extra_list("plans.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
+    let mut audits_state = use_signal(|| extra_list("system_audits.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
+    let mut notifications_state = use_signal(|| extra_list("global_notifications.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
 
     let mut store_name = use_signal(|| String::new());
     let mut store_owner = use_signal(|| String::new());
@@ -2572,14 +2746,14 @@ fn SuperAdminTab() -> Element {
 
 #[component]
 fn CreateProductTab() -> Element {
-    let store = get_store();
-    let categories = extra_list(store, "categories.json");
-    let sub_categories = extra_list(store, "sub_categories.json");
-    let brands = extra_list(store, "brands.json");
-    let units = extra_list(store, "units.json");
-    let warranties = extra_list(store, "warranties.json");
-    let warehouses = extra_list(store, "warehouses.json");
-    let stores = extra_list(store, "stores.json");
+    let store = get_store_fresh();
+    let categories = extra_list("categories.json");
+    let sub_categories = extra_list("sub_categories.json");
+    let brands = extra_list("brands.json");
+    let units = extra_list("units.json");
+    let warranties = extra_list("warranties.json");
+    let warehouses = extra_list("warehouses.json");
+    let stores = extra_list("stores.json");
     let mut products_state = use_signal(|| store.products.clone());
     let mut save_msg = use_signal(|| false);
     let mut save_error = use_signal(|| None::<String>);
@@ -2601,6 +2775,9 @@ fn CreateProductTab() -> Element {
     let mut manufacturer = use_signal(|| String::new());
     let mut manufactured_date = use_signal(|| String::new());
     let mut expiry_date = use_signal(|| String::new());
+    let mut image_payload = use_signal(|| None::<String>);
+    let mut image_type = use_signal(|| None::<String>);
+    let mut image_preview = use_signal(|| None::<String>);
 
     let handle_save = {
         let mut products_state = products_state.clone();
@@ -2624,22 +2801,33 @@ fn CreateProductTab() -> Element {
         let mut manufacturer = manufacturer.clone();
         let mut manufactured_date = manufactured_date.clone();
         let mut expiry_date = expiry_date.clone();
+        let mut image_payload = image_payload.clone();
+        let mut image_type = image_type.clone();
+        let mut image_preview = image_preview.clone();
         move |_| {
             if product_name.read().is_empty() || sku.read().is_empty() {
                 save_error.set(Some("Product name and SKU are required.".to_string()));
                 return;
             }
             let price_val = match price.read().parse::<f32>() {
-                Ok(v) => v,
+                Ok(v) if v >= 0.01 => v,
                 Err(_) => {
                     save_error.set(Some("Price must be a valid number.".to_string()));
                     return;
                 }
+                _ => {
+                    save_error.set(Some("Price must be at least 0.01.".to_string()));
+                    return;
+                }
             };
             let qty_val = match quantity.read().parse::<i32>() {
-                Ok(v) => v,
+                Ok(v) if v >= 0 => v,
                 Err(_) => {
                     save_error.set(Some("Quantity must be a valid number.".to_string()));
+                    return;
+                }
+                _ => {
+                    save_error.set(Some("Quantity must be a non-negative number.".to_string()));
                     return;
                 }
             };
@@ -2647,6 +2835,20 @@ fn CreateProductTab() -> Element {
             if updated.iter().any(|p| p.barcode == *sku.read()) {
                 save_error.set(Some("A product with this SKU/Barcode already exists.".to_string()));
                 return;
+            }
+            let mut image_filename: Option<String> = None;
+            let mut image_type_saved: Option<String> = None;
+            if let (Some(payload), Some(img_type)) = (image_payload.read().clone(), image_type.read().clone()) {
+                match ImageService::save_product_image(&payload, &img_type) {
+                    Ok(filename) => {
+                        image_filename = Some(filename);
+                        image_type_saved = Some(img_type);
+                    }
+                    Err(err) => {
+                        save_error.set(Some(format!("Image upload failed: {}", err)));
+                        return;
+                    }
+                }
             }
             let now = now_iso();
             let product = Product {
@@ -2657,8 +2859,8 @@ fn CreateProductTab() -> Element {
                 price: price_val,
                 quantity: qty_val,
                 category: if category.read().is_empty() { "Uncategorized".to_string() } else { category.read().clone() },
-                product_image: None,
-                product_image_type: None,
+                product_image: image_filename,
+                product_image_type: image_type_saved,
                 created_at: now.clone(),
                 updated_at: now,
             };
@@ -2686,6 +2888,9 @@ fn CreateProductTab() -> Element {
                     expiry_date.set(String::new());
                     store_name.set(String::new());
                     warehouse_name.set(String::new());
+                    image_payload.set(None);
+                    image_type.set(None);
+                    image_preview.set(None);
                     spawn(async move {
                         sleep_ms(2_000).await;
                         save_msg.set(false);
@@ -2921,6 +3126,38 @@ fn CreateProductTab() -> Element {
                 div { class: "admin-card-body",
                     div { class: "upload-drop",
                         span { "Drag & drop or click to upload images" }
+                        { let mut image_payload = image_payload.clone();
+                          let mut image_type = image_type.clone();
+                          let mut image_preview = image_preview.clone();
+                          let mut save_error = save_error.clone();
+                          rsx!(
+                            input {
+                                r#type: "file",
+                                accept: "image/*",
+                                onchange: move |e| {
+                                    let path = e.value();
+                                    if path.is_empty() {
+                                        return;
+                                    }
+                                    match load_image_from_path(&path) {
+                                        Ok((payload, img_type, preview)) => {
+                                            image_payload.set(Some(payload));
+                                            image_type.set(Some(img_type));
+                                            image_preview.set(Some(preview));
+                                        }
+                                        Err(err) => {
+                                            save_error.set(Some(format!("Image load failed: {}", err)));
+                                        }
+                                    }
+                                },
+                            }
+                          )
+                        }
+                    }
+                    if let Some(img) = image_preview.read().clone() {
+                        div { class: "image-preview",
+                            img { src: "{img}" }
+                        }
                     }
                 }
             }
@@ -2997,8 +3234,8 @@ fn CreateProductTab() -> Element {
 
 #[component]
 fn ExpiredProductsTab() -> Element {
-    let store = get_store();
-    let expired = extra_list(store, "expired_products.json");
+    let store = get_store_fresh();
+    let expired = extra_list("expired_products.json");
     let rows: Vec<(String, String, String, String, String)> = expired
         .iter()
         .map(|item| {
@@ -3051,7 +3288,7 @@ fn ExpiredProductsTab() -> Element {
 
 #[component]
 fn LowStocksTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let low_products: Vec<(String, String, String, String, String)> = store
         .products
         .iter()
@@ -3103,12 +3340,9 @@ fn LowStocksTab() -> Element {
 
 #[component]
 fn CategoriesTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut categories_state = use_signal(|| {
-        extra_list(store, "categories.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("categories.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -3117,7 +3351,6 @@ fn CategoriesTab() -> Element {
     let mut status_state = use_signal(|| "Active".to_string());
 
     let rows = categories_state.read().clone();
-
     let open_new = move |_| {
         edit_id.set(None);
         name_state.set(String::new());
@@ -3146,7 +3379,7 @@ fn CategoriesTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "slug"]);
                             let name = pick_first(item, &["name", "category"]);
                             let slug = pick_first(item, &["slug", "id"]);
@@ -3169,19 +3402,21 @@ fn CategoriesTab() -> Element {
                                     categories_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{name}" }
-                                td { "{slug}" }
-                                td { "{created}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{name}" }
+                                    td { "{slug}" }
+                                    td { "{created}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -3266,12 +3501,9 @@ fn CategoriesTab() -> Element {
 
 #[component]
 fn SubCategoriesTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut subcats_state = use_signal(|| {
-        extra_list(store, "sub_categories.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("sub_categories.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -3282,7 +3514,6 @@ fn SubCategoriesTab() -> Element {
     let mut status_state = use_signal(|| "Active".to_string());
 
     let rows = subcats_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -3316,7 +3547,7 @@ fn SubCategoriesTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "code"]);
                             let name = pick_first(item, &["sub_category", "name"]);
                             let category = pick_first(item, &["category"]);
@@ -3341,20 +3572,22 @@ fn SubCategoriesTab() -> Element {
                                     subcats_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{name}" }
-                                td { "{category}" }
-                                td { "{code}" }
-                                td { "{description}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{name}" }
+                                    td { "{category}" }
+                                    td { "{code}" }
+                                    td { "{description}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -3438,19 +3671,15 @@ fn SubCategoriesTab() -> Element {
 
 #[component]
 fn BrandsTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut brands_state = use_signal(|| {
-        extra_list(store, "brands.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("brands.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
     let mut name_state = use_signal(|| String::new());
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = brands_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -3475,7 +3704,7 @@ fn BrandsTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "brand"]);
                             let name = pick_first(item, &["brand", "name"]);
                             let created = pick_first(item, &["created_at", "created"]);
@@ -3495,18 +3724,20 @@ fn BrandsTab() -> Element {
                                     brands_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{name}" }
-                                td { "{created}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{name}" }
+                                    td { "{created}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -3567,12 +3798,9 @@ fn BrandsTab() -> Element {
 
 #[component]
 fn UnitsTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut units_state = use_signal(|| {
-        extra_list(store, "units.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("units.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -3581,7 +3809,6 @@ fn UnitsTab() -> Element {
     let mut products_state = use_signal(|| String::from("0"));
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = units_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -3609,7 +3836,7 @@ fn UnitsTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "unit"]);
                             let name = pick_first(item, &["unit", "name"]);
                             let short = pick_first(item, &["short", "abbr"]);
@@ -3632,19 +3859,21 @@ fn UnitsTab() -> Element {
                                     units_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{name}" }
-                                td { "{short}" }
-                                td { "{products}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{name}" }
+                                    td { "{short}" }
+                                    td { "{products}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -3721,12 +3950,9 @@ fn UnitsTab() -> Element {
 
 #[component]
 fn VariantAttributesTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut variants_state = use_signal(|| {
-        extra_list(store, "variant_attributes.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("variant_attributes.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -3734,7 +3960,6 @@ fn VariantAttributesTab() -> Element {
     let mut values_state = use_signal(|| String::new());
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = variants_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -3761,7 +3986,7 @@ fn VariantAttributesTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "variant"]);
                             let name = pick_first(item, &["variant", "name"]);
                             let values = pick_first(item, &["values", "options"]);
@@ -3783,19 +4008,21 @@ fn VariantAttributesTab() -> Element {
                                     variants_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{name}" }
-                                td { "{values}" }
-                                td { "{created}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{name}" }
+                                    td { "{values}" }
+                                    td { "{created}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -3864,12 +4091,9 @@ fn VariantAttributesTab() -> Element {
 
 #[component]
 fn WarrantiesTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut warranties_state = use_signal(|| {
-        extra_list(store, "warranties.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("warranties.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -3878,7 +4102,6 @@ fn WarrantiesTab() -> Element {
     let mut duration_state = use_signal(|| String::new());
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = warranties_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -3906,7 +4129,7 @@ fn WarrantiesTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "warranty"]);
                             let name = pick_first(item, &["warranty", "name"]);
                             let description = pick_first(item, &["description"]);
@@ -3929,19 +4152,21 @@ fn WarrantiesTab() -> Element {
                                     warranties_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{name}" }
-                                td { "{description}" }
-                                td { "{duration}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{name}" }
+                                    td { "{description}" }
+                                    td { "{duration}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -4132,12 +4357,9 @@ fn PrintQrCodeTab() -> Element {
 
 #[component]
 fn WarehousesTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut warehouses_state = use_signal(|| {
-        extra_list(store, "warehouses.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("warehouses.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -4149,7 +4371,6 @@ fn WarehousesTab() -> Element {
     let mut qty_state = use_signal(|| String::from("0"));
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = warehouses_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -4184,7 +4405,7 @@ fn WarehousesTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "warehouse"]);
                             let warehouse = pick_first(item, &["warehouse", "name"]);
                             let contact = pick_first(item, &["contact", "contact_person"]);
@@ -4214,23 +4435,25 @@ fn WarehousesTab() -> Element {
                                     warehouses_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{warehouse}" }
-                                td { "{contact}" }
-                                td { "{phone}" }
-                                td { "{total_products}" }
-                                td { "{stock}" }
-                                td { "{qty}" }
-                                td { "{created}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{warehouse}" }
+                                    td { "{contact}" }
+                                    td { "{phone}" }
+                                    td { "{total_products}" }
+                                    td { "{stock}" }
+                                    td { "{qty}" }
+                                    td { "{created}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -4331,12 +4554,9 @@ fn WarehousesTab() -> Element {
 
 #[component]
 fn StoresTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut stores_state = use_signal(|| {
-        extra_list(store, "stores.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("stores.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -4346,7 +4566,6 @@ fn StoresTab() -> Element {
     let mut phone_state = use_signal(|| String::new());
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = stores_state.read().clone();
-
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
@@ -4376,7 +4595,7 @@ fn StoresTab() -> Element {
                         }
                     }
                     tbody {
-                        for item in rows.iter() {
+                        { rows.iter().map(|item| {
                             let id = pick_first(item, &["id", "store"]);
                             let store_name = pick_first(item, &["store", "name"]);
                             let user = pick_first(item, &["user", "username"]);
@@ -4401,20 +4620,22 @@ fn StoresTab() -> Element {
                                     stores_state.set(next);
                                 }
                             };
-                            tr {
-                                td { "{store_name}" }
-                                td { "{user}" }
-                                td { "{email}" }
-                                td { "{phone}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
+                            rsx!(
+                                tr {
+                                    td { "{store_name}" }
+                                    td { "{user}" }
+                                    td { "{email}" }
+                                    td { "{phone}" }
+                                    td { StatusChip { label: status } }
+                                    td {
+                                        div { class: "table-actions",
+                                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                                        }
                                     }
                                 }
-                            }
-                        }
+                            )
+                        }) }
                     }
                 }
             }
@@ -4498,12 +4719,9 @@ fn StoresTab() -> Element {
 
 #[component]
 fn BillersTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut billers_state = use_signal(|| {
-        extra_list(store, "billers.json")
-            .into_iter()
-            .cloned()
-            .collect::<Vec<_>>()
+        extra_list("billers.json")
     });
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
@@ -4514,6 +4732,54 @@ fn BillersTab() -> Element {
     let mut country_state = use_signal(|| String::new());
     let mut status_state = use_signal(|| "Active".to_string());
     let rows = billers_state.read().clone();
+    let row_nodes: Vec<Element> = rows
+        .iter()
+        .map(|item| {
+            let code = pick_first(item, &["id", "code"]);
+            let biller = pick_first(item, &["biller", "name"]);
+            let company = pick_first(item, &["company", "company_name"]);
+            let email = pick_first(item, &["email"]);
+            let phone = pick_first(item, &["phone"]);
+            let country = pick_first(item, &["country"]);
+            let status = pick_first(item, &["status"]);
+            let item_clone = item.clone();
+            let edit_id_clone = code.clone();
+            let on_edit = move |_| {
+                edit_id.set(Some(edit_id_clone.clone()));
+                biller_state.set(pick_first(&item_clone, &["biller", "name"]));
+                company_state.set(pick_first(&item_clone, &["company", "company_name"]));
+                email_state.set(pick_first(&item_clone, &["email"]));
+                phone_state.set(pick_first(&item_clone, &["phone"]));
+                country_state.set(pick_first(&item_clone, &["country"]));
+                status_state.set(pick_first(&item_clone, &["status"]));
+                show_modal.set(true);
+            };
+            let on_delete = move |_| {
+                let mut next = billers_state.read().clone();
+                next.retain(|v| pick_first(v, &["id", "code"]) != code);
+                if save_extra_to_json("billers.json", &next).is_ok() {
+                    billers_state.set(next);
+                }
+            };
+            rsx!(
+                tr {
+                    td { "{code}" }
+                    td { "{biller}" }
+                    td { "{company}" }
+                    td { "{email}" }
+                    td { "{phone}" }
+                    td { "{country}" }
+                    td { StatusChip { label: status } }
+                    td {
+                        div { class: "table-actions",
+                            button { class: "btn-secondary", onclick: on_edit, "Edit" }
+                            button { class: "btn-danger", onclick: on_delete, "Delete" }
+                        }
+                    }
+                }
+            )
+        })
+        .collect();
 
     rsx! {
         div { class: "admin-table-page",
@@ -4546,51 +4812,7 @@ fn BillersTab() -> Element {
                             th { "Actions" }
                         }
                     }
-                    tbody {
-                        for item in rows.iter() {
-                            let code = pick_first(item, &["id", "code"]);
-                            let biller = pick_first(item, &["biller", "name"]);
-                            let company = pick_first(item, &["company", "company_name"]);
-                            let email = pick_first(item, &["email"]);
-                            let phone = pick_first(item, &["phone"]);
-                            let country = pick_first(item, &["country"]);
-                            let status = pick_first(item, &["status"]);
-                            let item_clone = item.clone();
-                            let edit_id_clone = code.clone();
-                            let on_edit = move |_| {
-                                edit_id.set(Some(edit_id_clone.clone()));
-                                biller_state.set(pick_first(&item_clone, &["biller", "name"]));
-                                company_state.set(pick_first(&item_clone, &["company", "company_name"]));
-                                email_state.set(pick_first(&item_clone, &["email"]));
-                                phone_state.set(pick_first(&item_clone, &["phone"]));
-                                country_state.set(pick_first(&item_clone, &["country"]));
-                                status_state.set(pick_first(&item_clone, &["status"]));
-                                show_modal.set(true);
-                            };
-                            let on_delete = move |_| {
-                                let mut next = billers_state.read().clone();
-                                next.retain(|v| pick_first(v, &["id", "code"]) != code);
-                                if save_extra_to_json("billers.json", &next).is_ok() {
-                                    billers_state.set(next);
-                                }
-                            };
-                            tr {
-                                td { "{code}" }
-                                td { "{biller}" }
-                                td { "{company}" }
-                                td { "{email}" }
-                                td { "{phone}" }
-                                td { "{country}" }
-                                td { StatusChip { label: status } }
-                                td {
-                                    div { class: "table-actions",
-                                        button { class: "btn-secondary", onclick: on_edit, "Edit" }
-                                        button { class: "btn-danger", onclick: on_delete, "Delete" }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    tbody { { row_nodes } }
                 }
             }
             if *show_modal.read() {
@@ -4681,8 +4903,8 @@ fn BillersTab() -> Element {
 
 #[component]
 fn ManageStockTab() -> Element {
-    let store = get_store();
-    let movements = extra_list(store, "inventory_movements.json");
+    let store = get_store_fresh();
+    let movements = extra_list("inventory_movements.json");
     let product_lookup: HashMap<String, String> = store
         .products
         .iter()
@@ -4748,8 +4970,8 @@ fn ManageStockTab() -> Element {
 
 #[component]
 fn StockAdjustmentTab() -> Element {
-    let store = get_store();
-    let movements = extra_list(store, "inventory_movements.json");
+    let store = get_store_fresh();
+    let movements = extra_list("inventory_movements.json");
     let product_lookup: HashMap<String, String> = store
         .products
         .iter()
@@ -4806,8 +5028,8 @@ fn StockAdjustmentTab() -> Element {
 
 #[component]
 fn StockTransferTab() -> Element {
-    let store = get_store();
-    let movements = extra_list(store, "inventory_movements.json");
+    let store = get_store_fresh();
+    let movements = extra_list("inventory_movements.json");
     let product_lookup: HashMap<String, String> = store
         .products
         .iter()
@@ -4864,7 +5086,7 @@ fn StockTransferTab() -> Element {
 
 #[component]
 fn InvoiceReportTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let rows: Vec<(String, String, String, String, String)> = store
         .sales
         .iter()
@@ -4935,8 +5157,8 @@ fn InvoiceReportTab() -> Element {
 
 #[component]
 fn SupplierReportTab() -> Element {
-    let store = get_store();
-    let suppliers = extra_list(store, "suppliers.json");
+    let store = get_store_fresh();
+    let suppliers = extra_list("suppliers.json");
     let rows: Vec<(String, String, String, String, String)> = suppliers
         .iter()
         .map(|item| {
@@ -4989,8 +5211,8 @@ fn SupplierReportTab() -> Element {
 
 #[component]
 fn CustomerReportTab() -> Element {
-    let store = get_store();
-    let customers = extra_list(store, "customers.json");
+    let store = get_store_fresh();
+    let customers = extra_list("customers.json");
     let mut orders_by_customer: HashMap<String, i32> = HashMap::new();
     for sale in store.sales.iter() {
         if let Some(customer_id) = &sale.customer_id {
@@ -5049,10 +5271,10 @@ fn CustomerReportTab() -> Element {
 
 #[component]
 fn ProductReportTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut category_filter = use_signal(|| "All".to_string());
     let mut brand_filter = use_signal(|| "All".to_string());
-    let sale_items = extra_list(store, "sale_items.json");
+    let sale_items = extra_list("sale_items.json");
     let mut totals: HashMap<String, (i32, f32)> = HashMap::new();
     for item in sale_items.iter() {
         let product_id = pick_first(item, &["product_id", "productId", "id"]);
@@ -5140,7 +5362,7 @@ fn ProductReportTab() -> Element {
 
 #[component]
 fn InventoryReportTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut category_filter = use_signal(|| "All".to_string());
     let mut categories: Vec<String> = store.products.iter().map(|p| p.category.clone()).collect();
     categories.sort();
@@ -5201,8 +5423,8 @@ fn InventoryReportTab() -> Element {
 
 #[component]
 fn PurchaseReportTab() -> Element {
-    let store = get_store();
-    let movements = extra_list(store, "inventory_movements.json");
+    let store = get_store_fresh();
+    let movements = extra_list("inventory_movements.json");
     let product_lookup: HashMap<String, String> = store
         .products
         .iter()
@@ -5259,7 +5481,7 @@ fn PurchaseReportTab() -> Element {
 
 #[component]
 fn SalesReportTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let mut start_date = use_signal(|| String::new());
     let mut end_date = use_signal(|| String::new());
     let mut status_filter = use_signal(|| "All".to_string());
@@ -5349,7 +5571,7 @@ fn SalesTab() -> Element {
     let mut show_sale_modal = use_signal(|| false);
     let mut selected_sale_id = use_signal(|| None as Option<String>);
     let mut sales_state = use_signal(|| {
-        let store = get_store();
+        let store = get_store_fresh();
         store.sales.clone()
     });
     let mut status_filter = use_signal(|| "all".to_string());
@@ -5362,9 +5584,9 @@ fn SalesTab() -> Element {
     let mut sale_error = use_signal(|| None::<String>);
     let mut sale_export_msg = use_signal(|| None::<String>);
     let mut sale_export_error = use_signal(|| None::<String>);
-    let store = get_store();
+    let store = get_store_fresh();
     let sales = sales_state.read().clone();
-    let sale_items = extra_list(store, "sale_items.json");
+    let sale_items = extra_list("sale_items.json");
     let scans = &store.scans;
     let is_completed = |status: &str| status.eq_ignore_ascii_case("paid") || status.eq_ignore_ascii_case("completed");
     let completed_sales = sales.iter().filter(|s| is_completed(&s.status)).count();
@@ -5823,7 +6045,7 @@ fn StaffTab() -> Element {
     let mut staff_email = use_signal(|| String::new());
     let mut staff_password = use_signal(|| String::new());
     let mut staff_image = use_signal(|| None::<String>);
-    let store = get_store();
+    let store = get_store_fresh();
     let users = store.users.clone();
     let sales = &store.sales;
     
@@ -6144,8 +6366,8 @@ fn StaffTab() -> Element {
 
 #[component]
 fn CustomersTab() -> Element {
-    let store = get_store();
-    let customers = extra_list(store, "customers.json");
+    let store = get_store_fresh();
+    let customers = extra_list("customers.json");
     let mut customers_state = use_signal(|| customers.iter().map(|c| (*c).clone()).collect::<Vec<_>>());
     let customers_owned = customers_state.read().clone();
     let active_customers = customers_owned.iter().filter(|c| {
@@ -6163,6 +6385,9 @@ fn CustomersTab() -> Element {
     let mut add_email = use_signal(|| String::new());
     let mut add_phone = use_signal(|| String::new());
     let mut add_status = use_signal(|| "active".to_string());
+    let mut add_image_payload = use_signal(|| None::<String>);
+    let mut add_image_type = use_signal(|| None::<String>);
+    let mut add_image_preview = use_signal(|| None::<String>);
     let mut add_msg = use_signal(|| None::<String>);
     let mut add_error = use_signal(|| None::<String>);
     let mut show_edit_modal = use_signal(|| false);
@@ -6171,6 +6396,10 @@ fn CustomersTab() -> Element {
     let mut edit_email = use_signal(|| String::new());
     let mut edit_phone = use_signal(|| String::new());
     let mut edit_status = use_signal(|| "active".to_string());
+    let mut edit_image_payload = use_signal(|| None::<String>);
+    let mut edit_image_type = use_signal(|| None::<String>);
+    let mut edit_image_name = use_signal(|| None::<String>);
+    let mut edit_image_preview = use_signal(|| None::<String>);
     let mut edit_msg = use_signal(|| None::<String>);
     let mut edit_error = use_signal(|| None::<String>);
     let mut delete_msg = use_signal(|| None::<String>);
@@ -6182,6 +6411,9 @@ fn CustomersTab() -> Element {
         let mut add_email = add_email.clone();
         let mut add_phone = add_phone.clone();
         let mut add_status = add_status.clone();
+        let mut add_image_payload = add_image_payload.clone();
+        let mut add_image_type = add_image_type.clone();
+        let mut add_image_preview = add_image_preview.clone();
         let mut add_msg = add_msg.clone();
         let mut add_error = add_error.clone();
         move |_| {
@@ -6189,15 +6421,36 @@ fn CustomersTab() -> Element {
                 add_error.set(Some("Customer name is required.".to_string()));
                 return;
             }
+            if !is_valid_email(&add_email.read()) {
+                add_error.set(Some("Please enter a valid email address.".to_string()));
+                return;
+            }
             let mut updated = customers_state.read().clone();
+            let id = new_id("cust");
+            let mut image_filename: Option<String> = None;
+            let mut image_type_saved: Option<String> = None;
+            if let (Some(payload), Some(img_type)) = (add_image_payload.read().clone(), add_image_type.read().clone()) {
+                match ImageService::save_user_image(&payload, &img_type, &id) {
+                    Ok(filename) => {
+                        image_filename = Some(filename);
+                        image_type_saved = Some(img_type);
+                    }
+                    Err(err) => {
+                        add_error.set(Some(format!("Image upload failed: {}", err)));
+                        return;
+                    }
+                }
+            }
             let now = now_iso();
             updated.push(json!({
-                "id": new_id("cust"),
+                "id": id,
                 "name": add_name.read().clone(),
                 "email": add_email.read().clone(),
                 "phone": add_phone.read().clone(),
                 "status": add_status.read().clone(),
                 "loyalty_points": 0,
+                "profile_image": image_filename,
+                "profile_image_type": image_type_saved,
                 "created_at": now,
                 "updated_at": now,
             }));
@@ -6210,6 +6463,9 @@ fn CustomersTab() -> Element {
                     add_email.set(String::new());
                     add_phone.set(String::new());
                     add_status.set("active".to_string());
+                    add_image_payload.set(None);
+                    add_image_type.set(None);
+                    add_image_preview.set(None);
                     spawn(async move {
                         sleep_ms(2_000).await;
                         add_msg.set(None);
@@ -6227,6 +6483,10 @@ fn CustomersTab() -> Element {
         let mut edit_email = edit_email.clone();
         let mut edit_phone = edit_phone.clone();
         let mut edit_status = edit_status.clone();
+        let mut edit_image_payload = edit_image_payload.clone();
+        let mut edit_image_type = edit_image_type.clone();
+        let mut edit_image_name = edit_image_name.clone();
+        let mut edit_image_preview = edit_image_preview.clone();
         let mut edit_msg = edit_msg.clone();
         let mut edit_error = edit_error.clone();
         let mut show_edit_modal = show_edit_modal.clone();
@@ -6236,12 +6496,32 @@ fn CustomersTab() -> Element {
                 None => return,
             };
             let mut updated = customers_state.read().clone();
+            let mut image_filename = edit_image_name.read().clone();
+            let mut image_type_saved = edit_image_type.read().clone();
+            if let (Some(payload), Some(img_type)) = (edit_image_payload.read().clone(), edit_image_type.read().clone()) {
+                match ImageService::save_user_image(&payload, &img_type, &id) {
+                    Ok(filename) => {
+                        image_filename = Some(filename);
+                        image_type_saved = Some(img_type);
+                    }
+                    Err(err) => {
+                        edit_error.set(Some(format!("Image upload failed: {}", err)));
+                        return;
+                    }
+                }
+            }
             if let Some(entry) = updated.iter_mut().find(|c| pick_first(c, &["id", "customer_id"]) == id) {
                 if let Some(obj) = entry.as_object_mut() {
+                    if !is_valid_email(&edit_email.read()) {
+                        edit_error.set(Some("Please enter a valid email address.".to_string()));
+                        return;
+                    }
                     obj.insert("name".to_string(), json!(edit_name.read().clone()));
                     obj.insert("email".to_string(), json!(edit_email.read().clone()));
                     obj.insert("phone".to_string(), json!(edit_phone.read().clone()));
                     obj.insert("status".to_string(), json!(edit_status.read().clone()));
+                    obj.insert("profile_image".to_string(), json!(image_filename));
+                    obj.insert("profile_image_type".to_string(), json!(image_type_saved));
                     obj.insert("updated_at".to_string(), json!(now_iso()));
                 }
             } else {
@@ -6255,6 +6535,10 @@ fn CustomersTab() -> Element {
                     edit_msg.set(Some("✅ Customer updated.".to_string()));
                     show_edit_modal.set(false);
                     edit_id.set(None);
+                    edit_image_payload.set(None);
+                    edit_image_type.set(None);
+                    edit_image_name.set(None);
+                    edit_image_preview.set(None);
                     spawn(async move {
                         sleep_ms(2_000).await;
                         edit_msg.set(None);
@@ -6423,6 +6707,42 @@ fn CustomersTab() -> Element {
                             }
                         }
                     }
+                    div { class: "form-field span-2",
+                        label { "Profile Image" }
+                        div { class: "file-input-wrapper",
+                            button { class: "btn btn-secondary", "📷 Choose Image" }
+                            { let mut add_image_payload = add_image_payload.clone();
+                              let mut add_image_type = add_image_type.clone();
+                              let mut add_image_preview = add_image_preview.clone();
+                              let mut add_error = add_error.clone();
+                              rsx!(
+                                input {
+                                    r#type: "file",
+                                    accept: "image/*",
+                                    onchange: move |e| {
+                                        let path = e.value();
+                                        if path.is_empty() {
+                                            return;
+                                        }
+                                        match load_image_from_path(&path) {
+                                            Ok((payload, img_type, preview)) => {
+                                                add_image_payload.set(Some(payload));
+                                                add_image_type.set(Some(img_type));
+                                                add_image_preview.set(Some(preview));
+                                            }
+                                            Err(err) => add_error.set(Some(format!("Image load failed: {}", err))),
+                                        }
+                                    },
+                                }
+                              )
+                            }
+                        }
+                        if let Some(img) = add_image_preview.read().clone() {
+                            div { class: "image-preview",
+                                img { src: "{img}" }
+                            }
+                        }
+                    }
                 }
                 div { class: "form-actions",
                     button {
@@ -6567,12 +6887,18 @@ fn CustomersTab() -> Element {
                                         let email = pick_first(c, &["email", "contact_email", "phone"]);
                                         let phone = pick_first(c, &["phone", "contact_phone", "mobile"]);
                                         let status = pick_first(c, &["status", "tier", "segment"]);
+                                        let image_name = pick_first(c, &["profile_image", "image"]);
+                                        let image_type = pick_first(c, &["profile_image_type", "image_type"]);
                                         let mut show_edit_modal = show_edit_modal.clone();
                                         let mut edit_id = edit_id.clone();
                                         let mut edit_name = edit_name.clone();
                                         let mut edit_email = edit_email.clone();
                                         let mut edit_phone = edit_phone.clone();
                                         let mut edit_status = edit_status.clone();
+                                        let mut edit_image_name = edit_image_name.clone();
+                                        let mut edit_image_type = edit_image_type.clone();
+                                        let mut edit_image_payload = edit_image_payload.clone();
+                                        let mut edit_image_preview = edit_image_preview.clone();
                                         let mut customers_state = customers_state.clone();
                                         let mut delete_msg = delete_msg.clone();
                                         let mut delete_error = delete_error.clone();
@@ -6592,6 +6918,15 @@ fn CustomersTab() -> Element {
                                                             edit_email.set(email.clone());
                                                             edit_phone.set(phone.clone());
                                                             edit_status.set(if status.is_empty() { "active".to_string() } else { status.clone() });
+                                                            let image_name_opt = if image_name.is_empty() { None } else { Some(image_name.clone()) };
+                                                            let image_type_opt = if image_type.is_empty() { None } else { Some(image_type.clone()) };
+                                                            edit_image_name.set(image_name_opt.clone());
+                                                            edit_image_type.set(image_type_opt.clone());
+                                                            edit_image_payload.set(None);
+                                                            let preview = image_name_opt
+                                                                .as_deref()
+                                                                .and_then(|name| image_preview_from_filename(name, &image_type_opt, PROFILES_IMAGES_DIR));
+                                                            edit_image_preview.set(preview);
                                                             show_edit_modal.set(true);
                                                         },
                                                         "✏️ Edit"
@@ -6706,6 +7041,42 @@ fn CustomersTab() -> Element {
                                 }
                             }
                         }
+                        div { class: "form-group",
+                            label { "Profile Image" }
+                            div { class: "file-input-wrapper",
+                                button { class: "btn btn-secondary", "📷 Choose Image" }
+                                { let mut edit_image_payload = edit_image_payload.clone();
+                                  let mut edit_image_type = edit_image_type.clone();
+                                  let mut edit_image_preview = edit_image_preview.clone();
+                                  let mut edit_error = edit_error.clone();
+                                  rsx!(
+                                    input {
+                                        r#type: "file",
+                                        accept: "image/*",
+                                        onchange: move |e| {
+                                            let path = e.value();
+                                            if path.is_empty() {
+                                                return;
+                                            }
+                                            match load_image_from_path(&path) {
+                                                Ok((payload, img_type, preview)) => {
+                                                    edit_image_payload.set(Some(payload));
+                                                    edit_image_type.set(Some(img_type));
+                                                    edit_image_preview.set(Some(preview));
+                                                }
+                                                Err(err) => edit_error.set(Some(format!("Image load failed: {}", err))),
+                                            }
+                                        },
+                                    }
+                                  )
+                                }
+                            }
+                            if let Some(img) = edit_image_preview.read().clone() {
+                                div { class: "image-preview",
+                                    img { src: "{img}" }
+                                }
+                            }
+                        }
                         div { class: "form-actions",
                             button {
                                 class: "btn btn-primary",
@@ -6727,10 +7098,10 @@ fn CustomersTab() -> Element {
 
 #[component]
 fn InventoryTab() -> Element {
-    let store = get_store();
+    let store = get_store_fresh();
     let products = &store.products;
-    let movements = extra_list(store, "inventory_movements.json");
-    let categories = extra_list(store, "categories.json");
+    let movements = extra_list("inventory_movements.json");
+    let categories = extra_list("categories.json");
     let out_of_stock = products.iter().filter(|p| p.quantity == 0).count();
     let low_stock = products.iter().filter(|p| p.quantity < LOW_STOCK_THRESHOLD).count();
     let total_value: f32 = products.iter().map(|p| p.price * p.quantity as f32).sum();
@@ -6869,8 +7240,8 @@ fn InventoryTab() -> Element {
 
 #[component]
 fn PaymentsTab() -> Element {
-    let store = get_store();
-    let payments = extra_list(store, "payments.json");
+    let store = get_store_fresh();
+    let payments = extra_list("payments.json");
     let payments_owned: Vec<serde_json::Value> = payments.iter().map(|p| (*p).clone()).collect();
     let payments_for_normalize = payments_owned.clone();
     let payments_for_summary = payments_owned.clone();
@@ -7089,11 +7460,11 @@ fn PaymentsTab() -> Element {
 
 #[component]
 fn AccessTab() -> Element {
-    let store = get_store();
-    let roles = extra_list(store, "roles.json");
-    let permissions = extra_list(store, "permissions.json");
-    let role_permissions = extra_list(store, "role_permissions.json");
-    let user_roles = extra_list(store, "user_roles.json");
+    let store = get_store_fresh();
+    let roles = extra_list("roles.json");
+    let permissions = extra_list("permissions.json");
+    let role_permissions = extra_list("role_permissions.json");
+    let user_roles = extra_list("user_roles.json");
     let user_options: Vec<(String, String)> = store
         .users
         .iter()
@@ -7454,8 +7825,8 @@ fn AccessTab() -> Element {
 
 #[component]
 fn SuppliersTab() -> Element {
-    let store = get_store();
-    let suppliers = extra_list(store, "suppliers.json");
+    let store = get_store_fresh();
+    let suppliers = extra_list("suppliers.json");
     let mut suppliers_state = use_signal(|| suppliers.iter().map(|s| (*s).clone()).collect::<Vec<_>>());
     let suppliers_owned = suppliers_state.read().clone();
     let active_suppliers = suppliers_owned.iter().filter(|s| {
@@ -7496,6 +7867,10 @@ fn SuppliersTab() -> Element {
         move |_| {
             if add_name.read().is_empty() {
                 add_error.set(Some("Supplier name is required.".to_string()));
+                return;
+            }
+            if !is_valid_email(&add_email.read()) {
+                add_error.set(Some("Please enter a valid email address.".to_string()));
                 return;
             }
             let mut updated = suppliers_state.read().clone();
@@ -7552,6 +7927,10 @@ fn SuppliersTab() -> Element {
             let mut updated = suppliers_state.read().clone();
             if let Some(entry) = updated.iter_mut().find(|s| pick_first(s, &["id", "supplier_id"]) == id) {
                 if let Some(obj) = entry.as_object_mut() {
+                    if !is_valid_email(&edit_email.read()) {
+                        edit_error.set(Some("Please enter a valid email address.".to_string()));
+                        return;
+                    }
                     obj.insert("name".to_string(), json!(edit_name.read().clone()));
                     obj.insert("contact_name".to_string(), json!(edit_contact.read().clone()));
                     obj.insert("phone".to_string(), json!(edit_phone.read().clone()));
@@ -7894,8 +8273,8 @@ fn SuppliersTab() -> Element {
 
 #[component]
 fn ShiftsTab() -> Element {
-    let store = get_store();
-    let shifts = extra_list(store, "shifts.json");
+    let store = get_store_fresh();
+    let shifts = extra_list("shifts.json");
     let open_shifts = shifts.iter().filter(|s| value_is(s, "status", "open")).count();
     let closed_shifts = shifts.iter().filter(|s| value_is(s, "status", "closed")).count();
 
