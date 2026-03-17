@@ -1,7 +1,7 @@
 # POS UI Full Audit Report (Admin Dashboard)
 
 Date: 2026-03-16
-Scope: Admin dashboard and admin tabs in `POS/src/ui/pages/admin.rs`, supporting styles in `POS/src/ui/pages/admin.css`, chart component in `POS/src/ui/components/dashborads/sales_trend.rs`, settings persistence in `POS/src/config/ui_settings.rs`.
+Scope: Admin dashboard and admin tabs in `POS/src/ui/pages/dashboard.rs`, supporting styles in `POS/src/ui/pages/dashboard.css` and `POS/src/ui/components/dashboard/tabs/*.css`, chart component in `POS/src/ui/components/dashboard/sales_trend.rs`, settings persistence in `POS/src/config/ui_settings.rs`.
 
 ## Executive Summary
 The admin UI now mirrors the reference design language and includes the full set of inventory/stock/report pages. It supports real metrics, product/sales editing with JSON persistence, CSV exports, normalized status actions, search/sort/pagination across key tabs, and access control workflows. New admin pages were added for warehouse/store/biller management, inventory master data (brands/units/variants/warranties/categories), stock workflows, and report pages. Remaining work is mostly data normalization, wiring create/edit actions to persistence, and advanced analytics.

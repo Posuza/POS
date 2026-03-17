@@ -1,0 +1,15 @@
+.tab-content {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    padding: clamp(18px, 2.4vw, 26px);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07);
+    animation: riseIn 0.4s ease both;
+}
+
+.tab-content h2 {
+    margin: 0;
+    color: #111827;
+    font-size: clamp(26px, 4vw, 36px);
+    letter-spacing: -0.03em;
+}

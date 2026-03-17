@@ -1,0 +1,289 @@
+/* Admin drawer */
+
+.admin-sidebar-drawer {
+    position: fixed;
+    left: 0;
+    top: 60px;
+    height: calc(100vh - 60px);
+    width: base-(260px) md-(min(320px, 86vw)) sm-(64px);
+    background: #ffffff;
+    border-right: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    z-index: 9000;
+    transform: base-(translateX(0)) md-(translateX(-100%));
+    transition: transform 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.admin-sidebar-drawer.open {
+    transform: translateX(0);
+}
+
+/* Overlay backdrop */
+.admin-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 8990;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Sidebar header with close button */
+.admin-sidebar-header {
+    display: base-(flex) sm-(none);
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 12px;
+}
+
+.admin-sidebar-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--navy-900);
+}
+
+.admin-sidebar-close {
+    display: base-(none) md-(inline-flex);
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--navy-800);
+    width: 40px;
+    height: 40px;
+    transition: color 0.2s;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.admin-sidebar-close:hover {
+    color: var(--primary-color);
+}
+
+/* Sidebar navigation menu */
+.admin-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: base-(8px) sm-(6px);
+    padding: base-(12px 10px 18px) sm-(0);
+    flex: 1;
+}
+
+.admin-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: base-(10px 12px) sm-(10px 8px);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: base-(var(--radius-md)) sm-(0);
+    cursor: pointer;
+    color: var(--grey-600);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    position: relative;
+    justify-content: sm-(center);
+}
+
+.admin-sidebar-item:hover {
+    background-color: #fff4e5;
+    color: var(--navy-900);
+}
+
+.admin-sidebar-item.active {
+    background: #fff4e5;
+    border-color: rgba(255, 159, 67, 0.4);
+    color: var(--navy-900);
+    box-shadow: none;
+}
+
+.admin-sidebar-item.active::before {
+    content: "";
+    position: absolute;
+    left: -1px;
+    top: 8px;
+    bottom: 8px;
+    width: 4px;
+    border-radius: 999px;
+    background: var(--primary-500);
+}
+
+.admin-sidebar-item:focus-visible {
+    outline: 2px solid rgba(255, 159, 67, 0.5);
+    outline-offset: 2px;
+}
+
+.admin-sidebar-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    width: base-(24px) sm-(100%);
+    text-align: center;
+    line-height: 1;
+    color: var(--grey-400);
+}
+
+.admin-sidebar-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    display: sm-(none);
+}
+
+/* Admin page layout adjustments */
+.admin-page {
+    margin-top: 60px;
+    min-height: calc(100vh - 60px);
+    background: var(--bg-color);
+    font-family: var(--font-family);
+    color: var(--text-color);
+}
+
+.admin-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+    min-height: calc(100vh - 60px);
+}
+
+/* Menu toggle button */
+.admin-menu-toggle-wrap {
+    display: base-(none) md-(block);
+    position: md-(sticky);
+    top: md-(60px);
+    z-index: md-(8995);
+    padding: base-(8px clamp(8px, 2vw, 18px) 0) md-(16px 16px 0) sm-(0);
+    margin: sm-(0);
+    background: transparent;
+    border: none;
+}
+
+.admin-menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: base-(center) sm-(flex-start);
+    gap: base-(10px) sm-(0);
+    padding: base-(13px 18px) sm-(10px 12px);
+    background: var(--primary-500);
+    color: white;
+    border: 1px solid var(--primary-500);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+    width: base-(fit-content) sm-(100%);
+}
+
+.admin-menu-toggle-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.admin-menu-toggle-label {
+    line-height: 1;
+    display: sm-(none);
+}
+
+.admin-menu-toggle:hover {
+    background: var(--primary-600);
+    opacity: 0.9;
+}
+
+.admin-menu-toggle:active {
+    transform: scale(0.98);
+}
+
+.admin-menu-toggle:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.45);
+}
+
+/* Main content adjusts for desktop sidebar */
+.admin-main {
+    flex: 1;
+    padding: base-(24px) xl-(20px) lg-(16px) md-(0);
+    margin-left: base-(260px) md-(0);
+    width: base-(calc(100% - 260px)) md-(100%);
+    max-width: none;
+}
+
+
+.admin-main > * {
+    width: 100%;
+    max-width: base-(1200px) xl-(100%);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: base-(24px) xl-(20px) lg-(16px) sm-(12px);
+    padding-right: base-(24px) xl-(20px) lg-(16px) sm-(12px);
+}
+
+.admin-page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted-color);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.breadcrumb-sep {
+    color: #94a3b8;
+}
+
+.breadcrumb-current {
+    color: #0f172a;
+    font-weight: 800;
+}
+
+.page-title {
+    margin: 0;
+    font-size: clamp(22px, 4vw, 30px);
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.page-updated {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+}

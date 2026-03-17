@@ -1,15 +1,16 @@
 /* main.css now split into modular files.
    See settings.css, base.css, layout.css, buttons.css,
    forms.css, tables.css, cards.css, modal.css, navbar.css,
-   sidebar.css moved under src/ui/components/, admin.css moved to src/ui/pages/admin.css.
+   sidebar.css moved under src/ui/components/, dashboard layout moved to src/ui/pages/dashboard.css.
 */
 /* Sidebar styles moved to modular files:
    - src/ui/styles/sidebar.css (base)
-   - src/ui/pages/admin.css (admin-specific overrides)
+   - src/ui/pages/dashboard.css (admin shell)
+   - src/ui/components/dashboard/tabs/*.css (admin tabs)
    - src/ui/pages/pos.css (POS page styles)
    - src/ui/pages/login.css (Login page styles)
    - src/ui/components/*.css (component styles)
-   - src/ui/components/dashborads/*.css (dashboard component styles)
+   - src/ui/components/dashboard/*.css (dashboard component styles)
    Keep sidebar rules there to avoid duplication/conflicts. */
 
 /* Alerts */

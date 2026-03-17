@@ -1,6 +1,7 @@
+use std::collections::HashSet;
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
 struct MediaRule {
@@ -13,22 +14,38 @@ struct MediaRule {
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
-    let css_files = [
+    let mut css_files: Vec<String> = vec![
         "src/ui/styles/main.css",
         "src/ui/components/base.css",
         "src/ui/pages/pos.css",
-        "src/ui/pages/admin.css",
+        "src/ui/pages/dashboard.css",
         "src/ui/pages/login.css",
         "src/ui/components/cards.css",
         "src/ui/components/forms.css",
         "src/ui/components/modal.css",
         "src/ui/components/navbar.css",
         "src/ui/components/buttons.css",
-        "src/ui/components/dashborads/sidebar.css",
-        "src/ui/components/dashborads/tables.css",
-        "src/ui/components/dashborads/sales_trend.css",
-        "src/ui/components/dashborads/settings.css",
-    ];
+        "src/ui/components/tab_container.css",
+        "src/ui/components/dashboard/sidebar.css",
+        "src/ui/components/dashboard/tables.css",
+        "src/ui/components/dashboard/sales_trend.css",
+        "src/ui/components/dashboard/dashboard.css",
+        "src/ui/components/dashboard/settings.css",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect();
+
+    let ui_dir = PathBuf::from(&manifest_dir).join("src/ui");
+    println!("cargo:rerun-if-changed={}", ui_dir.display());
+    let mut seen: HashSet<String> = css_files.iter().cloned().collect();
+    let mut extra_css = collect_css_files(&ui_dir, Path::new(&manifest_dir));
+    extra_css.sort();
+    for rel in extra_css {
+        if seen.insert(rel.clone()) {
+            css_files.push(rel);
+        }
+    }
 
     let mut output = String::new();
 
@@ -53,6 +70,35 @@ fn main() {
     fs::write(&out_path, output).unwrap_or_else(|e| {
         panic!("Failed to write {}: {}", out_path.display(), e)
     });
+}
+
+fn collect_css_files(root: &Path, manifest_dir: &Path) -> Vec<String> {
+    let mut out = Vec::new();
+    let Ok(entries) = fs::read_dir(root) else {
+        return out;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            out.extend(collect_css_files(&path, manifest_dir));
+            continue;
+        }
+        let is_css = path
+            .extension()
+            .and_then(|s| s.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("css"))
+            .unwrap_or(false);
+        if !is_css {
+            continue;
+        }
+        let Ok(rel) = path.strip_prefix(manifest_dir) else {
+            continue;
+        };
+        if let Some(rel_str) = rel.to_str() {
+            out.push(rel_str.to_string());
+        }
+    }
+    out
 }
 
 // Note: this is a line-based transformer and does not rewrite nested @media blocks.
