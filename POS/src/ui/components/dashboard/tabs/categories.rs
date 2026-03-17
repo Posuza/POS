@@ -24,7 +24,10 @@ pub(crate) fn CategoriesTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search categories..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search categories..." }
+                }
                 div { class: "toolbar-actions",
                     button { class: "btn-primary", onclick: open_new, "Add Category" }
                 }
@@ -47,7 +50,7 @@ pub(crate) fn CategoriesTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Category\" } else { \"Add Category\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Category" } else { "Add Category" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",

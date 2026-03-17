@@ -18,7 +18,10 @@ pub(crate) fn BillersTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search billers..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search billers..." }
+                }
                 div { class: "toolbar-actions",
                     button { class: "btn-primary", onclick: move |_| {
                         edit_id.set(None);
@@ -29,8 +32,8 @@ pub(crate) fn BillersTab() -> Element {
                         country_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Biller" },
-                },
+                    }, "Add Biller" }
+                }
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -67,9 +70,10 @@ pub(crate) fn BillersTab() -> Element {
                                 status_state.set(pick_first(&item_clone, &["status"]));
                                 show_modal.set(true);
                             };
+                            let delete_code = code.clone();
                             let on_delete = move |_| {
                                 let mut next = billers_state.read().clone();
-                                next.retain(|v| pick_first(v, &["id", "code"]) != code);
+                                next.retain(|v| pick_first(v, &["id", "code"]) != delete_code);
                                 if save_extra_to_json("billers.json", &next).is_ok() {
                                     billers_state.set(next);
                                 }
@@ -99,7 +103,7 @@ pub(crate) fn BillersTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Biller\" } else { \"Add Biller\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Biller" } else { "Add Biller" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",
@@ -172,7 +176,7 @@ pub(crate) fn BillersTab() -> Element {
                                     billers_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" },
+                            }, "Save" }
                         }
                     }
                 }

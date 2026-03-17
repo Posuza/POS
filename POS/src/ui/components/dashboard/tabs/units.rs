@@ -16,7 +16,10 @@ pub(crate) fn UnitsTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search units..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search units..." }
+                }
                 div { class: "toolbar-actions",
                     button { class: "btn-primary", onclick: move |_| {
                         edit_id.set(None);
@@ -25,8 +28,8 @@ pub(crate) fn UnitsTab() -> Element {
                         products_state.set("0".to_string());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Unit" },
-                },
+                    }, "Add Unit" }
+                }
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -85,7 +88,7 @@ pub(crate) fn UnitsTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Unit\" } else { \"Add Unit\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Unit" } else { "Add Unit" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",
@@ -143,7 +146,7 @@ pub(crate) fn UnitsTab() -> Element {
                                     units_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" },
+                            }, "Save" }
                         }
                     }
                 }

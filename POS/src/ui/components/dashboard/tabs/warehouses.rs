@@ -19,7 +19,10 @@ pub(crate) fn WarehousesTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search warehouse..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search warehouse..." }
+                }
                 div { class: "toolbar-actions",
                     button { class: "btn-primary", onclick: move |_| {
                         edit_id.set(None);
@@ -31,8 +34,8 @@ pub(crate) fn WarehousesTab() -> Element {
                         qty_state.set("0".to_string());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Warehouse" },
-                },
+                    }, "Add Warehouse" }
+                }
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -106,7 +109,7 @@ pub(crate) fn WarehousesTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Warehouse\" } else { \"Add Warehouse\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Warehouse" } else { "Add Warehouse" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",
@@ -188,7 +191,7 @@ pub(crate) fn WarehousesTab() -> Element {
                                     warehouses_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" },
+                            }, "Save" }
                         }
                     }
                 }

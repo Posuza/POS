@@ -17,7 +17,10 @@ pub(crate) fn StoresTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search stores..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search stores..." }
+                }
                 div { class: "toolbar-actions",
                     button { class: "btn-primary", onclick: move |_| {
                         edit_id.set(None);
@@ -27,8 +30,8 @@ pub(crate) fn StoresTab() -> Element {
                         phone_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Store" },
-                },
+                    }, "Add Store" }
+                }
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -91,7 +94,7 @@ pub(crate) fn StoresTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Store\" } else { \"Add Store\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Store" } else { "Add Store" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",
@@ -156,7 +159,7 @@ pub(crate) fn StoresTab() -> Element {
                                     stores_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" },
+                            }, "Save" }
                         }
                     }
                 }

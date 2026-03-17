@@ -16,7 +16,10 @@ pub(crate) fn WarrantiesTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search warranties..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search warranties..." }
+                }
                 div { class: "toolbar-actions",
                     button { class: "btn-primary", onclick: move |_| {
                         edit_id.set(None);
@@ -25,8 +28,8 @@ pub(crate) fn WarrantiesTab() -> Element {
                         duration_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Warranty" },
-                },
+                    }, "Add Warranty" }
+                }
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -85,7 +88,7 @@ pub(crate) fn WarrantiesTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Warranty\" } else { \"Add Warranty\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Warranty" } else { "Add Warranty" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",
@@ -130,7 +133,7 @@ pub(crate) fn WarrantiesTab() -> Element {
                                     warranties_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" },
+                            }, "Save" }
                         }
                     }
                 }

@@ -18,7 +18,10 @@ pub(crate) fn SubCategoriesTab() -> Element {
     rsx! {
         div { class: "admin-table-page",
             div { class: "admin-toolbar",
-                SearchInput { placeholder: "Search sub categories..." }
+                                div { class: "input-group",
+                    span { class: "input-icon-left", "🔍" }
+                    input { r#type: "search", placeholder: "Search sub categories..." }
+                }
                 div { class: "toolbar-actions",
                     button {
                         class: "btn-primary",
@@ -96,7 +99,7 @@ pub(crate) fn SubCategoriesTab() -> Element {
                 div { class: "modal",
                     div { class: "modal-content",
                         div { class: "modal-header",
-                            h3 { "{if edit_id.read().is_some() { \"Edit Sub Category\" } else { \"Add Sub Category\" }}" }
+                            h3 { if edit_id.read().is_some() { "Edit Sub Category" } else { "Add Sub Category" } }
                             button { class: "modal-close", onclick: move |_| show_modal.set(false), "✕" }
                         }
                         div { class: "form-group",
@@ -161,7 +164,7 @@ pub(crate) fn SubCategoriesTab() -> Element {
                                     subcats_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" },
+                            }, "Save" }
                         }
                     }
                 }
