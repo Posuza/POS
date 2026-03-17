@@ -22,7 +22,9 @@ pub(crate) fn SalesTab() -> Element {
     let sales = sales_state.read().clone();
     let sale_items = extra_list("sale_items.json");
     let scans = &store.scans;
-    let is_completed = |status: &str| status.eq_ignore_ascii_case("paid") || status.eq_ignore_ascii_case("completed");
+    let is_completed = |status: &str| {
+        status.eq_ignore_ascii_case("paid") || status.eq_ignore_ascii_case("completed")
+    };
     let completed_sales = sales.iter().filter(|s| is_completed(&s.status)).count();
     let pending_sales = sales.iter().filter(|s| !is_completed(&s.status)).count();
     let mut cashier_list: Vec<String> = sales.iter().map(|s| s.cashier_id.clone()).collect();
@@ -55,12 +57,13 @@ pub(crate) fn SalesTab() -> Element {
         .cloned()
         .collect();
     let sort_key = sale_sort.read().clone();
-    filtered_sales.sort_by(|a, b| {
-        match sort_key.as_str() {
-            "total" => a.total.partial_cmp(&b.total).unwrap_or(std::cmp::Ordering::Equal),
-            "status" => a.status.to_lowercase().cmp(&b.status.to_lowercase()),
-            _ => a.created_at.cmp(&b.created_at),
-        }
+    filtered_sales.sort_by(|a, b| match sort_key.as_str() {
+        "total" => a
+            .total
+            .partial_cmp(&b.total)
+            .unwrap_or(std::cmp::Ordering::Equal),
+        "status" => a.status.to_lowercase().cmp(&b.status.to_lowercase()),
+        _ => a.created_at.cmp(&b.created_at),
     });
     if sale_order.read().as_str() == "desc" {
         filtered_sales.reverse();

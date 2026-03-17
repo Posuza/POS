@@ -7,8 +7,8 @@ pub struct User {
     pub email: String,
     pub role: UserRole,
     pub status: String,
-    pub profile_image: Option<String>,        // 📸 Base64 or path
-    pub profile_image_type: Option<String>,   // jpeg, png
+    pub profile_image: Option<String>,      // 📸 Base64 or path
+    pub profile_image_type: Option<String>, // jpeg, png
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]

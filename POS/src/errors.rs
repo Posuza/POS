@@ -9,25 +9,25 @@ pub type Result<T> = std::result::Result<T, PosError>;
 pub enum PosError {
     /// Database operation failed
     DatabaseError(String),
-    
+
     /// Image operation failed
     ImageError(String),
-    
+
     /// Authentication failed
     AuthenticationError(String),
-    
+
     /// Validation failed
     ValidationError(String),
-    
+
     /// File operation failed
     FileError(String),
-    
+
     /// Configuration error
     ConfigError(String),
-    
+
     /// Not found error
     NotFound(String),
-    
+
     /// General error
     Other(String),
 }

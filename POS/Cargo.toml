@@ -8,6 +8,7 @@ build = "build.rs"
 # Desktop UI
 dioxus = { version = "0.5", features = ["desktop"] }
 dioxus-router = "0.5"
+dioxus-free-icons = { version = "0.8", features = ["font-awesome-solid", "font-awesome-regular"] }
 
 # Local database (SQLite)
 sqlx = { version = "0.7", features = ["runtime-tokio-native-tls", "sqlite", "migrate"] }

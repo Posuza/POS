@@ -3,9 +3,7 @@ use super::prelude::*;
 #[component]
 pub(crate) fn CategoriesTab() -> Element {
     let store = get_store_fresh();
-    let mut categories_state = use_signal(|| {
-        extra_list("categories.json")
-    });
+    let mut categories_state = use_signal(|| extra_list("categories.json"));
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
     let mut name_state = use_signal(|| String::new());

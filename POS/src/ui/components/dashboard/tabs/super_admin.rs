@@ -3,10 +3,30 @@ use super::prelude::*;
 #[component]
 pub(crate) fn SuperAdminTab() -> Element {
     let store = get_store_fresh();
-    let mut stores_state = use_signal(|| extra_list("stores.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
-    let mut plans_state = use_signal(|| extra_list("plans.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
-    let mut audits_state = use_signal(|| extra_list("system_audits.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
-    let mut notifications_state = use_signal(|| extra_list("global_notifications.json").iter().map(|v| (*v).clone()).collect::<Vec<_>>());
+    let mut stores_state = use_signal(|| {
+        extra_list("stores.json")
+            .iter()
+            .map(|v| (*v).clone())
+            .collect::<Vec<_>>()
+    });
+    let mut plans_state = use_signal(|| {
+        extra_list("plans.json")
+            .iter()
+            .map(|v| (*v).clone())
+            .collect::<Vec<_>>()
+    });
+    let mut audits_state = use_signal(|| {
+        extra_list("system_audits.json")
+            .iter()
+            .map(|v| (*v).clone())
+            .collect::<Vec<_>>()
+    });
+    let mut notifications_state = use_signal(|| {
+        extra_list("global_notifications.json")
+            .iter()
+            .map(|v| (*v).clone())
+            .collect::<Vec<_>>()
+    });
 
     let mut store_name = use_signal(|| String::new());
     let mut store_owner = use_signal(|| String::new());
@@ -130,7 +150,9 @@ pub(crate) fn SuperAdminTab() -> Element {
         let mut action_error = action_error.clone();
         move |_| {
             if notice_title.read().is_empty() || notice_body.read().is_empty() {
-                action_error.set(Some("Notification title and message are required.".to_string()));
+                action_error.set(Some(
+                    "Notification title and message are required.".to_string(),
+                ));
                 return;
             }
             let mut updated = notifications_state.read().clone();

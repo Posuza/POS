@@ -1,13 +1,13 @@
-mod ui;
-mod data;
 mod config;
-mod utils;
+mod data;
 mod errors;
 mod services;
+mod ui;
+mod utils;
 
-use dioxus::prelude::*;
-use ui::pages::{LoginPage, AdminPage, POSPage};
 use data::models::user::{User, UserRole};
+use dioxus::prelude::*;
+use ui::pages::{AdminPage, LoginPage, POSPage};
 
 fn main() {
     if let Err(err) = data::init_json() {
@@ -26,10 +26,7 @@ fn App() -> Element {
 
     rsx! {
         div { class: "app",
-            // Styles (centralized via `ui::styles::get_styles()`)
             style { {ui::styles::get_styles()} }
-
-            // Conditional render: login or the appropriate page
             if let Some(user) = user_opt {
                 if user.role == UserRole::Admin {
                     AdminPage { user: user.clone(), on_logout: move |_| current_user.set(None) }

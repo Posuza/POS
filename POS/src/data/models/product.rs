@@ -9,8 +9,8 @@ pub struct Product {
     pub price: f32,
     pub quantity: i32,
     pub category: String,
-    pub product_image: Option<String>,        // 📸 Base64 or path
-    pub product_image_type: Option<String>,   // jpeg, png
+    pub product_image: Option<String>,      // 📸 Base64 or path
+    pub product_image_type: Option<String>, // jpeg, png
     pub created_at: String,
     pub updated_at: String,
 }
@@ -23,7 +23,7 @@ pub struct CreateProductRequest {
     pub price: f32,
     pub quantity: i32,
     pub category: String,
-    pub product_image: Option<String>,        // 📸 Base64
+    pub product_image: Option<String>, // 📸 Base64
     pub product_image_type: Option<String>,
 }
 

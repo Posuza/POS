@@ -39,7 +39,9 @@ static UI_SETTINGS: OnceLock<RwLock<UiSettings>> = OnceLock::new();
 
 pub fn get_ui_settings() -> UiSettings {
     let lock = UI_SETTINGS.get_or_init(|| RwLock::new(load_ui_settings()));
-    lock.read().map(|s| s.clone()).unwrap_or_else(|_| UiSettings::default())
+    lock.read()
+        .map(|s| s.clone())
+        .unwrap_or_else(|_| UiSettings::default())
 }
 
 pub fn save_ui_settings(settings: &UiSettings) -> std::io::Result<()> {
@@ -47,8 +49,7 @@ pub fn save_ui_settings(settings: &UiSettings) -> std::io::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    let contents = serde_json::to_string_pretty(settings)
-        .unwrap_or_else(|_| "{}".to_string());
+    let contents = serde_json::to_string_pretty(settings).unwrap_or_else(|_| "{}".to_string());
     fs::write(&path, contents)?;
 
     let lock = UI_SETTINGS.get_or_init(|| RwLock::new(settings.clone()));

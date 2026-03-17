@@ -16,7 +16,7 @@ pub(crate) fn StaffTab() -> Element {
     let store = get_store_fresh();
     let users = store.users.clone();
     let sales = &store.sales;
-    
+
     let handle_add_staff = move |_| {
         if staff_username.read().is_empty() || staff_email.read().is_empty() {
             return;
@@ -28,7 +28,7 @@ pub(crate) fn StaffTab() -> Element {
         staff_image.set(None);
         show_add_modal.set(false);
     };
-    
+
     let query = staff_query.read().to_lowercase();
     let mut filtered_staff: Vec<crate::data::json_store::UserRecord> = users
         .clone()
@@ -41,17 +41,18 @@ pub(crate) fn StaffTab() -> Element {
                 let email = u.email.to_lowercase();
                 let role = format!("{:?}", u.role).to_lowercase();
                 let status = u.status.to_lowercase();
-                name.contains(&query) || email.contains(&query) || role.contains(&query) || status.contains(&query)
+                name.contains(&query)
+                    || email.contains(&query)
+                    || role.contains(&query)
+                    || status.contains(&query)
             }
         })
         .collect();
     let sort_key = staff_sort.read().clone();
-    filtered_staff.sort_by(|a, b| {
-        match sort_key.as_str() {
-            "email" => a.email.to_lowercase().cmp(&b.email.to_lowercase()),
-            "status" => a.status.to_lowercase().cmp(&b.status.to_lowercase()),
-            _ => a.username.to_lowercase().cmp(&b.username.to_lowercase()),
-        }
+    filtered_staff.sort_by(|a, b| match sort_key.as_str() {
+        "email" => a.email.to_lowercase().cmp(&b.email.to_lowercase()),
+        "status" => a.status.to_lowercase().cmp(&b.status.to_lowercase()),
+        _ => a.username.to_lowercase().cmp(&b.username.to_lowercase()),
     });
     if staff_order.read().as_str() == "desc" {
         filtered_staff.reverse();
@@ -68,7 +69,11 @@ pub(crate) fn StaffTab() -> Element {
     };
     let mut staff_rows: Vec<Element> = Vec::new();
     for u in page_items.into_iter() {
-        let status_label = if u.status == "active" { "✅ Active" } else { "⏸️ Inactive" };
+        let status_label = if u.status == "active" {
+            "✅ Active"
+        } else {
+            "⏸️ Inactive"
+        };
         let role_label = match u.role {
             crate::data::models::user::UserRole::Admin => "🛡️ Admin",
             crate::data::models::user::UserRole::Staff => "👤 Staff",

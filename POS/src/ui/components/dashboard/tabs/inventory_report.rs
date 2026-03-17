@@ -10,8 +10,17 @@ pub(crate) fn InventoryReportTab() -> Element {
     let rows: Vec<(String, String, String, String)> = store
         .products
         .iter()
-        .filter(|p| category_filter.read().as_str() == "All" || p.category == *category_filter.read())
-        .map(|p| (p.barcode.clone(), p.name.clone(), p.category.clone(), p.quantity.to_string()))
+        .filter(|p| {
+            category_filter.read().as_str() == "All" || p.category == *category_filter.read()
+        })
+        .map(|p| {
+            (
+                p.barcode.clone(),
+                p.name.clone(),
+                p.category.clone(),
+                p.quantity.to_string(),
+            )
+        })
         .collect();
 
     rsx! {

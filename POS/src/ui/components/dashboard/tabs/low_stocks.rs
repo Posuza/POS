@@ -9,7 +9,13 @@ pub(crate) fn LowStocksTab() -> Element {
         .filter(|p| p.quantity < LOW_STOCK_THRESHOLD)
         .map(|p| {
             let status = if p.quantity == 0 { "Out" } else { "Low" };
-            (p.barcode.clone(), p.name.clone(), p.category.clone(), p.quantity.to_string(), status.to_string())
+            (
+                p.barcode.clone(),
+                p.name.clone(),
+                p.category.clone(),
+                p.quantity.to_string(),
+                status.to_string(),
+            )
         })
         .collect();
 

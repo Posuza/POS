@@ -4,12 +4,16 @@ use super::prelude::*;
 pub(crate) fn CustomersTab() -> Element {
     let store = get_store_fresh();
     let customers = extra_list("customers.json");
-    let mut customers_state = use_signal(|| customers.iter().map(|c| (*c).clone()).collect::<Vec<_>>());
+    let mut customers_state =
+        use_signal(|| customers.iter().map(|c| (*c).clone()).collect::<Vec<_>>());
     let customers_owned = customers_state.read().clone();
-    let active_customers = customers_owned.iter().filter(|c| {
-        let status = pick_first(c, &["status"]);
-        status.is_empty() || status.eq_ignore_ascii_case("active")
-    }).count();
+    let active_customers = customers_owned
+        .iter()
+        .filter(|c| {
+            let status = pick_first(c, &["status"]);
+            status.is_empty() || status.eq_ignore_ascii_case("active")
+        })
+        .count();
     let sales = &store.sales;
     let mut customer_export_msg = use_signal(|| None::<String>);
     let mut customer_export_error = use_signal(|| None::<String>);
@@ -65,7 +69,10 @@ pub(crate) fn CustomersTab() -> Element {
             let id = new_id("cust");
             let mut image_filename: Option<String> = None;
             let mut image_type_saved: Option<String> = None;
-            if let (Some(payload), Some(img_type)) = (add_image_payload.read().clone(), add_image_type.read().clone()) {
+            if let (Some(payload), Some(img_type)) = (
+                add_image_payload.read().clone(),
+                add_image_type.read().clone(),
+            ) {
                 match ImageService::save_user_image(&payload, &img_type, &id) {
                     Ok(filename) => {
                         image_filename = Some(filename);
@@ -134,7 +141,10 @@ pub(crate) fn CustomersTab() -> Element {
             let mut updated = customers_state.read().clone();
             let mut image_filename = edit_image_name.read().clone();
             let mut image_type_saved = edit_image_type.read().clone();
-            if let (Some(payload), Some(img_type)) = (edit_image_payload.read().clone(), edit_image_type.read().clone()) {
+            if let (Some(payload), Some(img_type)) = (
+                edit_image_payload.read().clone(),
+                edit_image_type.read().clone(),
+            ) {
                 match ImageService::save_user_image(&payload, &img_type, &id) {
                     Ok(filename) => {
                         image_filename = Some(filename);
@@ -146,7 +156,10 @@ pub(crate) fn CustomersTab() -> Element {
                     }
                 }
             }
-            if let Some(entry) = updated.iter_mut().find(|c| pick_first(c, &["id", "customer_id"]) == id) {
+            if let Some(entry) = updated
+                .iter_mut()
+                .find(|c| pick_first(c, &["id", "customer_id"]) == id)
+            {
                 if let Some(obj) = entry.as_object_mut() {
                     if !is_valid_email(&edit_email.read()) {
                         edit_error.set(Some("Please enter a valid email address.".to_string()));
@@ -205,7 +218,8 @@ pub(crate) fn CustomersTab() -> Element {
         let a_val = pick_first(a, &["name", "full_name", "username", "id"]).to_lowercase();
         let b_val = pick_first(b, &["name", "full_name", "username", "id"]).to_lowercase();
         match sort_key.as_str() {
-            "status" => pick_first(a, &["status", "tier", "segment"]).to_lowercase()
+            "status" => pick_first(a, &["status", "tier", "segment"])
+                .to_lowercase()
                 .cmp(&pick_first(b, &["status", "tier", "segment"]).to_lowercase()),
             _ => a_val.cmp(&b_val),
         }

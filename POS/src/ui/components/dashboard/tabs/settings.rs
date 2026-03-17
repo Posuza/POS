@@ -7,7 +7,7 @@ pub(crate) fn SettingsTab() -> Element {
     let mut currency = use_signal(|| initial_settings.currency.clone());
     let mut show_save_msg = use_signal(|| false);
     let mut save_error = use_signal(|| None::<String>);
-    
+
     let handle_save = move |_| {
         let settings = crate::config::ui_settings::UiSettings {
             business_name: business_name.read().clone(),
@@ -27,11 +27,11 @@ pub(crate) fn SettingsTab() -> Element {
             }
         }
     };
-    
+
     rsx! {
         TabContainer {
             h2 { "⚙️ Settings" }
-            
+
             div { class: "settings-form",
                 div { class: "form-group",
                     label { "Business Name" }
@@ -41,7 +41,7 @@ pub(crate) fn SettingsTab() -> Element {
                         oninput: move |e| business_name.set(e.value()),
                     }
                 }
-                
+
                 div { class: "form-group",
                     label { "Currency" }
                     select {
@@ -53,18 +53,18 @@ pub(crate) fn SettingsTab() -> Element {
                         option { value: "JPY", "💴 JPY (¥)" }
                     }
                 }
-                
+
                 div { class: "form-group",
                     label { "Database Location" }
                     p { "📁 data/pos_data.db (Local SQLite)" }
                 }
-                
+
                 div { class: "form-group",
                     label { "Image Storage" }
                     p { "📁 Products: data/images/products/" }
                     p { style: "margin-top: 5px;", "📁 Profiles: data/images/profiles/" }
                 }
-                
+
                 if show_save_msg.read().clone() {
                     div { class: "message",
                         "✅ Settings saved successfully!"
@@ -75,7 +75,7 @@ pub(crate) fn SettingsTab() -> Element {
                         "{err}"
                     }
                 }
-                
+
                 button {
                     class: "btn btn-primary",
                     onclick: handle_save,

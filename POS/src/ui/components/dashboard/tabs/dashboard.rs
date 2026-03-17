@@ -39,15 +39,23 @@ pub(crate) fn DashboardTab(user: User) -> Element {
     let average_ticket_s = format!("{} avg ticket", format_price(average_ticket));
     let payments_total: f32 = payments
         .iter()
-        .map(|p| value_f32(p, "amount").or_else(|| value_f32(p, "total")).unwrap_or(0.0))
+        .map(|p| {
+            value_f32(p, "amount")
+                .or_else(|| value_f32(p, "total"))
+                .unwrap_or(0.0)
+        })
         .sum();
-    let open_shifts = shifts.iter().filter(|s| value_is(s, "status", "open")).count();
-    let active_suppliers = suppliers.iter().filter(|s| value_is(s, "status", "active")).count();
-
-    let product_lookup: HashMap<String, &crate::data::models::product::Product> = products
+    let open_shifts = shifts
         .iter()
-        .map(|p| (p.id.clone(), p))
-        .collect();
+        .filter(|s| value_is(s, "status", "open"))
+        .count();
+    let active_suppliers = suppliers
+        .iter()
+        .filter(|s| value_is(s, "status", "active"))
+        .count();
+
+    let product_lookup: HashMap<String, &crate::data::models::product::Product> =
+        products.iter().map(|p| (p.id.clone(), p)).collect();
 
     let _items_line = format!("Items in products table: {}", total_products_s);
     let _stock_line = format!("Total units in stock: {}", total_stock_s);
@@ -68,7 +76,11 @@ pub(crate) fn DashboardTab(user: User) -> Element {
     let mut category_vec: Vec<(String, f32)> = category_totals.into_iter().collect();
     category_vec.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
     let max_category = category_vec.first().map(|c| c.1).unwrap_or(1.0);
-    let total_category_count: f32 = category_vec.iter().map(|(_, total)| *total).sum::<f32>().max(1.0);
+    let total_category_count: f32 = category_vec
+        .iter()
+        .map(|(_, total)| *total)
+        .sum::<f32>()
+        .max(1.0);
     let top_categories: Vec<(String, i32)> = category_vec
         .iter()
         .take(3)
@@ -104,21 +116,30 @@ pub(crate) fn DashboardTab(user: User) -> Element {
     // series for chart: aggregate real metrics by day
     let mut sales_by_day: HashMap<String, (f32, i32)> = HashMap::new(); // day -> (revenue, tx count)
     for s in sales.iter() {
-        let day = s.created_at.split('T').next().unwrap_or(&s.created_at).to_string();
+        let day = s
+            .created_at
+            .split('T')
+            .next()
+            .unwrap_or(&s.created_at)
+            .to_string();
         let entry = sales_by_day.entry(day).or_insert((0.0, 0));
         entry.0 += s.total;
         entry.1 += 1;
     }
     let mut items_by_day: HashMap<String, i32> = HashMap::new();
-    let sales_by_id: HashMap<String, &crate::data::json_store::SaleRecord> = sales
-        .iter()
-        .map(|s| (s.id.clone(), s))
-        .collect();
+    let sales_by_id: HashMap<String, &crate::data::json_store::SaleRecord> =
+        sales.iter().map(|s| (s.id.clone(), s)).collect();
     for item in sale_items.iter() {
         let sale_id = pick_first(item, &["sale_id", "saleId", "sale"]);
         let day = sales_by_id
             .get(&sale_id)
-            .map(|s| s.created_at.split('T').next().unwrap_or(&s.created_at).to_string())
+            .map(|s| {
+                s.created_at
+                    .split('T')
+                    .next()
+                    .unwrap_or(&s.created_at)
+                    .to_string()
+            })
             .unwrap_or_else(|| "Unknown".to_string());
         let qty = value_i32(item, "quantity")
             .or_else(|| value_i32(item, "qty"))
@@ -161,8 +182,14 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
     let mut product_sales: HashMap<String, (String, i32, f32)> = HashMap::new(); // id -> (name, qty, revenue)
     for item in sale_items.iter() {
-        let key = pick_first(item, &["product_id", "productId", "name", "product_name", "id"]);
-        let name = pick_first(item, &["name", "product_name", "product_id", "productId", "id"]);
+        let key = pick_first(
+            item,
+            &["product_id", "productId", "name", "product_name", "id"],
+        );
+        let name = pick_first(
+            item,
+            &["name", "product_name", "product_id", "productId", "id"],
+        );
         let qty = value_i32(item, "quantity")
             .or_else(|| value_i32(item, "qty"))
             .unwrap_or(0);
@@ -178,7 +205,10 @@ pub(crate) fn DashboardTab(user: User) -> Element {
         .map(|(id, (name, qty, revenue))| (id, name, qty, revenue))
         .collect();
     product_sales_vec.sort_by(|a, b| b.3.partial_cmp(&a.3).unwrap_or(std::cmp::Ordering::Equal));
-    let _low_stock_count = products.iter().filter(|p| p.quantity < LOW_STOCK_THRESHOLD).count();
+    let _low_stock_count = products
+        .iter()
+        .filter(|p| p.quantity < LOW_STOCK_THRESHOLD)
+        .count();
     let _out_of_stock = products.iter().filter(|p| p.quantity == 0).count();
 
     let alerts: Vec<(&str, &str, &str)> = vec![
@@ -186,7 +216,11 @@ pub(crate) fn DashboardTab(user: User) -> Element {
         ("info", "Staff shift swap pending", "Review 2 requests"),
         ("success", "Export completed", "Sales_2026-01.csv"),
     ];
-    let active_pct = if users.is_empty() { 0 } else { ((active_users as f32 / users.len() as f32) * 100.0).round() as i32 };
+    let active_pct = if users.is_empty() {
+        0
+    } else {
+        ((active_users as f32 / users.len() as f32) * 100.0).round() as i32
+    };
     let inactive_pct = 100 - active_pct;
     let initials_for = |name: &str| {
         let mut chars = name.chars().filter(|c| c.is_alphabetic());
@@ -195,9 +229,17 @@ pub(crate) fn DashboardTab(user: User) -> Element {
         format!("{}{}", first, second).to_uppercase()
     };
 
-    let last_day_revenue = day_keys.last().and_then(|d| sales_by_day.get(d)).map(|v| v.0).unwrap_or(0.0);
+    let last_day_revenue = day_keys
+        .last()
+        .and_then(|d| sales_by_day.get(d))
+        .map(|v| v.0)
+        .unwrap_or(0.0);
     let prev_day_revenue = if day_keys.len() > 1 {
-        day_keys.get(day_keys.len() - 2).and_then(|d| sales_by_day.get(d)).map(|v| v.0).unwrap_or(0.0)
+        day_keys
+            .get(day_keys.len() - 2)
+            .and_then(|d| sales_by_day.get(d))
+            .map(|v| v.0)
+            .unwrap_or(0.0)
     } else {
         0.0
     };
@@ -207,7 +249,11 @@ pub(crate) fn DashboardTab(user: User) -> Element {
         ((last_day_revenue - prev_day_revenue) / prev_day_revenue) * 100.0
     };
     let revenue_delta_s = format!("{:.1}%", revenue_delta);
-    let transactions_today = day_keys.last().and_then(|d| sales_by_day.get(d)).map(|v| v.1).unwrap_or(0);
+    let transactions_today = day_keys
+        .last()
+        .and_then(|d| sales_by_day.get(d))
+        .map(|v| v.1)
+        .unwrap_or(0);
 
     let mut top_customers: Vec<(String, i32)> = Vec::new();
     let mut customer_sales: HashMap<String, i32> = HashMap::new();

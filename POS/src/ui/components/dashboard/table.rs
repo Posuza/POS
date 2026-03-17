@@ -1,5 +1,4 @@
 /// Table component
-
 use dioxus::prelude::*;
 
 /// Data table component

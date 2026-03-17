@@ -1,0 +1,5 @@
+{
+    "powerquery.client.additionalSymbolsDirectories": [
+        "/Users/user/Desktop/rust/POS/.vscode/excel-pq-symbols"
+    ]
+}

@@ -7,11 +7,28 @@ pub(crate) fn InvoiceReportTab() -> Element {
         .sales
         .iter()
         .map(|s| {
-            let customer = s.customer_id.clone().unwrap_or_else(|| "Walk-in".to_string());
+            let customer = s
+                .customer_id
+                .clone()
+                .unwrap_or_else(|| "Walk-in".to_string());
             let amount = format_price(s.total);
-            let paid = if s.status.to_lowercase() == "paid" { amount.clone() } else { "$0.00".to_string() };
-            let due = if s.status.to_lowercase() == "paid" { "$0.00".to_string() } else { amount.clone() };
-            (s.receipt_no.clone(), customer, amount, paid, s.status.clone())
+            let paid = if s.status.to_lowercase() == "paid" {
+                amount.clone()
+            } else {
+                "$0.00".to_string()
+            };
+            let due = if s.status.to_lowercase() == "paid" {
+                "$0.00".to_string()
+            } else {
+                amount.clone()
+            };
+            (
+                s.receipt_no.clone(),
+                customer,
+                amount,
+                paid,
+                s.status.clone(),
+            )
         })
         .collect();
 

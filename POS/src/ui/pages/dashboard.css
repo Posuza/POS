@@ -5,7 +5,7 @@
     left: 0;
     top: 60px;
     height: calc(100vh - 60px);
-    width: base-(260px) md-(min(320px, 86vw)) sm-(64px);
+    width: base-(260px) md-(260px) sm-(100px) xs-(60px);
     background: #ffffff;
     border-right: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);

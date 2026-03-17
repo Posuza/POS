@@ -1,9 +1,8 @@
 /// Database module - Connection and query operations
-
 pub mod connection;
 pub mod queries;
 
 #[allow(unused_imports)]
-pub use connection::{init_db, get_db_path};
+pub use connection::{get_db_path, init_db};
 #[allow(unused_imports)]
-pub use queries::{users, products, scans};
+pub use queries::{products, scans, users};

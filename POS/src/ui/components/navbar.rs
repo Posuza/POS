@@ -1,9 +1,8 @@
-/// Navbar component
-
-use dioxus::prelude::*;
+use crate::config::constants::PROFILES_IMAGES_DIR;
 use crate::data::models::user::User;
 use crate::services::image_service::ImageService;
-use crate::config::constants::PROFILES_IMAGES_DIR;
+/// Navbar component
+use dioxus::prelude::*;
 
 #[component]
 pub fn Navbar(
@@ -18,7 +17,8 @@ pub fn Navbar(
     // 2) `profile_image` contains a stored filename -> load file from profiles folder and convert to data URL
     // 3) absent -> None (will fall back to initials)
     let image_src = user.as_ref().and_then(|u| {
-        if let (Some(img), Some(img_t)) = (u.profile_image.as_ref(), u.profile_image_type.as_ref()) {
+        if let (Some(img), Some(img_t)) = (u.profile_image.as_ref(), u.profile_image_type.as_ref())
+        {
             if img.starts_with("data:") {
                 Some(img.clone())
             } else {
@@ -34,7 +34,8 @@ pub fn Navbar(
 
     // Compute display initials for fallback avatar when there's no profile image
     let initials = user.as_ref().map(|u| {
-        let mut letters: String = u.username
+        let mut letters: String = u
+            .username
             .split_whitespace()
             .filter(|s| !s.is_empty())
             .map(|s| s.chars().next().unwrap_or('?'))

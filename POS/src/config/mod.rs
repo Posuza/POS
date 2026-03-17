@@ -1,7 +1,6 @@
 /// Configuration module
-/// 
+///
 /// Handles application-wide configuration, constants, and settings
-
 pub mod constants;
 pub mod settings;
 pub mod ui_settings;

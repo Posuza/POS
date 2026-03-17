@@ -89,12 +89,16 @@ pub(crate) fn CreateProductTab() -> Element {
             };
             let mut updated = products_state.read().clone();
             if updated.iter().any(|p| p.barcode == *sku.read()) {
-                save_error.set(Some("A product with this SKU/Barcode already exists.".to_string()));
+                save_error.set(Some(
+                    "A product with this SKU/Barcode already exists.".to_string(),
+                ));
                 return;
             }
             let mut image_filename: Option<String> = None;
             let mut image_type_saved: Option<String> = None;
-            if let (Some(payload), Some(img_type)) = (image_payload.read().clone(), image_type.read().clone()) {
+            if let (Some(payload), Some(img_type)) =
+                (image_payload.read().clone(), image_type.read().clone())
+            {
                 match ImageService::save_product_image(&payload, &img_type) {
                     Ok(filename) => {
                         image_filename = Some(filename);
@@ -111,10 +115,18 @@ pub(crate) fn CreateProductTab() -> Element {
                 id: new_id("prod"),
                 barcode: sku.read().clone(),
                 name: product_name.read().clone(),
-                description: if description.read().is_empty() { None } else { Some(description.read().clone()) },
+                description: if description.read().is_empty() {
+                    None
+                } else {
+                    Some(description.read().clone())
+                },
                 price: price_val,
                 quantity: qty_val,
-                category: if category.read().is_empty() { "Uncategorized".to_string() } else { category.read().clone() },
+                category: if category.read().is_empty() {
+                    "Uncategorized".to_string()
+                } else {
+                    category.read().clone()
+                },
                 product_image: image_filename,
                 product_image_type: image_type_saved,
                 created_at: now.clone(),

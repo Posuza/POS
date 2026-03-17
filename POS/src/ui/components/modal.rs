@@ -1,5 +1,4 @@
 /// Modal component
-
 use dioxus::prelude::*;
 
 /// Modal dialog component

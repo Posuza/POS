@@ -7,7 +7,10 @@ pub(crate) fn InventoryTab() -> Element {
     let movements = extra_list("inventory_movements.json");
     let categories = extra_list("categories.json");
     let out_of_stock = products.iter().filter(|p| p.quantity == 0).count();
-    let low_stock = products.iter().filter(|p| p.quantity < LOW_STOCK_THRESHOLD).count();
+    let low_stock = products
+        .iter()
+        .filter(|p| p.quantity < LOW_STOCK_THRESHOLD)
+        .count();
     let total_value: f32 = products.iter().map(|p| p.price * p.quantity as f32).sum();
     let mut category_values: HashMap<String, f32> = HashMap::new();
     for p in products.iter() {

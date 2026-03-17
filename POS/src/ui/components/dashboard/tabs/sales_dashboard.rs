@@ -16,8 +16,16 @@ pub(crate) fn SalesDashboardTab() -> Element {
     } else {
         total_revenue / total_transactions as f32
     };
-    let voided_sales = sales.iter().filter(|s| s.status.eq_ignore_ascii_case("voided")).count();
-    let paid_sales = sales.iter().filter(|s| s.status.eq_ignore_ascii_case("paid") || s.status.eq_ignore_ascii_case("completed")).count();
+    let voided_sales = sales
+        .iter()
+        .filter(|s| s.status.eq_ignore_ascii_case("voided"))
+        .count();
+    let paid_sales = sales
+        .iter()
+        .filter(|s| {
+            s.status.eq_ignore_ascii_case("paid") || s.status.eq_ignore_ascii_case("completed")
+        })
+        .count();
     let pending_sales = total_transactions.saturating_sub(paid_sales + voided_sales);
     let last_updated = sales
         .last()
@@ -26,21 +34,30 @@ pub(crate) fn SalesDashboardTab() -> Element {
 
     let mut sales_by_day: HashMap<String, (f32, i32)> = HashMap::new();
     for s in sales.iter() {
-        let day = s.created_at.split('T').next().unwrap_or(&s.created_at).to_string();
+        let day = s
+            .created_at
+            .split('T')
+            .next()
+            .unwrap_or(&s.created_at)
+            .to_string();
         let entry = sales_by_day.entry(day).or_insert((0.0, 0));
         entry.0 += s.total;
         entry.1 += 1;
     }
     let mut items_by_day: HashMap<String, i32> = HashMap::new();
-    let sales_by_id: HashMap<String, &crate::data::json_store::SaleRecord> = sales
-        .iter()
-        .map(|s| (s.id.clone(), s))
-        .collect();
+    let sales_by_id: HashMap<String, &crate::data::json_store::SaleRecord> =
+        sales.iter().map(|s| (s.id.clone(), s)).collect();
     for item in sale_items.iter() {
         let sale_id = pick_first(item, &["sale_id", "saleId", "sale"]);
         let day = sales_by_id
             .get(&sale_id)
-            .map(|s| s.created_at.split('T').next().unwrap_or(&s.created_at).to_string())
+            .map(|s| {
+                s.created_at
+                    .split('T')
+                    .next()
+                    .unwrap_or(&s.created_at)
+                    .to_string()
+            })
             .unwrap_or_else(|| "Unknown".to_string());
         let qty = value_i32(item, "quantity")
             .or_else(|| value_i32(item, "qty"))
@@ -77,13 +94,19 @@ pub(crate) fn SalesDashboardTab() -> Element {
     top_customers.sort_by(|a, b| b.1.cmp(&a.1));
 
     let mut product_sales: HashMap<String, (String, i32, f32)> = HashMap::new();
-    let product_lookup: HashMap<String, &Product> = products.iter().map(|p| (p.id.clone(), p)).collect();
+    let product_lookup: HashMap<String, &Product> =
+        products.iter().map(|p| (p.id.clone(), p)).collect();
     for item in sale_items.iter() {
         let product_id = pick_first(item, &["product_id", "productId", "id"]);
         let name = product_lookup
             .get(&product_id)
             .map(|p| p.name.clone())
-            .unwrap_or_else(|| pick_first(item, &["name", "product_name", "product_id", "productId", "id"]));
+            .unwrap_or_else(|| {
+                pick_first(
+                    item,
+                    &["name", "product_name", "product_id", "productId", "id"],
+                )
+            });
         let qty = value_i32(item, "quantity")
             .or_else(|| value_i32(item, "qty"))
             .unwrap_or(0);
@@ -103,7 +126,9 @@ pub(crate) fn SalesDashboardTab() -> Element {
     let mut payment_rows: Vec<(String, String, String)> = Vec::new();
     for p in payments.iter().rev().take(5) {
         let method = pick_first(p, &["method", "type", "channel"]);
-        let amount = value_f32(p, "amount").or_else(|| value_f32(p, "total")).unwrap_or(0.0);
+        let amount = value_f32(p, "amount")
+            .or_else(|| value_f32(p, "total"))
+            .unwrap_or(0.0);
         let date = pick_first(p, &["paid_at", "created_at", "date"]);
         payment_rows.push((method, format_price(amount), date));
     }

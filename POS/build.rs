@@ -38,9 +38,8 @@ fn main() {
 
     let out_dir = env::var("OUT_DIR").expect("OUT_DIR not set");
     let out_path = PathBuf::from(out_dir).join("styles.css");
-    fs::write(&out_path, output).unwrap_or_else(|e| {
-        panic!("Failed to write {}: {}", out_path.display(), e)
-    });
+    fs::write(&out_path, output)
+        .unwrap_or_else(|e| panic!("Failed to write {}: {}", out_path.display(), e));
 }
 
 fn collect_css_files(root: &Path, manifest_dir: &Path) -> Vec<String> {
@@ -251,10 +250,11 @@ fn process_decl_line(line: &str, selector: &str, pending: &mut Vec<MediaRule>) -
 fn map_breakpoint(key: &str) -> Option<&'static str> {
     match key {
         "xs" => Some("480px"),
-        "sm" => Some("600px"),
+        "sm" => Some("640px"),
         "md" => Some("768px"),
-        "lg" => Some("900px"),
-        "xl" => Some("1200px"),
+        "lg" => Some("1024px"),
+        "xl" => Some("1280px"),
+        "2xl" => Some("1536px"),
         _ => None,
     }
 }
@@ -288,7 +288,11 @@ fn extract_tokens(value: &str) -> Vec<(String, String)> {
                     i += 1;
                 }
                 if i < chars.len() && chars[i] == ')' {
-                    let val = chars[val_start..i].iter().collect::<String>().trim().to_string();
+                    let val = chars[val_start..i]
+                        .iter()
+                        .collect::<String>()
+                        .trim()
+                        .to_string();
                     out.push((key, val));
                     i += 1;
                     continue;

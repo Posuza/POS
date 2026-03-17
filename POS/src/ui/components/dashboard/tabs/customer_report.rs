@@ -15,7 +15,11 @@ pub(crate) fn CustomerReportTab() -> Element {
         .map(|item| {
             let id = pick_first(item, &["id", "customer_id"]);
             let customer = pick_first(item, &["name", "full_name", "username"]);
-            let orders = orders_by_customer.get(&id).cloned().unwrap_or(0).to_string();
+            let orders = orders_by_customer
+                .get(&id)
+                .cloned()
+                .unwrap_or(0)
+                .to_string();
             let amount = pick_first(item, &["amount", "total"]);
             let status = pick_first(item, &["status", "payment_status"]);
             (id, customer, orders, amount, status)

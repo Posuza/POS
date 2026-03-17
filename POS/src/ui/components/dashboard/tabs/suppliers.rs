@@ -4,12 +4,16 @@ use super::prelude::*;
 pub(crate) fn SuppliersTab() -> Element {
     let store = get_store_fresh();
     let suppliers = extra_list("suppliers.json");
-    let mut suppliers_state = use_signal(|| suppliers.iter().map(|s| (*s).clone()).collect::<Vec<_>>());
+    let mut suppliers_state =
+        use_signal(|| suppliers.iter().map(|s| (*s).clone()).collect::<Vec<_>>());
     let suppliers_owned = suppliers_state.read().clone();
-    let active_suppliers = suppliers_owned.iter().filter(|s| {
-        let status = pick_first(s, &["status"]);
-        status.is_empty() || status.eq_ignore_ascii_case("active")
-    }).count();
+    let active_suppliers = suppliers_owned
+        .iter()
+        .filter(|s| {
+            let status = pick_first(s, &["status"]);
+            status.is_empty() || status.eq_ignore_ascii_case("active")
+        })
+        .count();
     let mut add_name = use_signal(|| String::new());
     let mut add_contact = use_signal(|| String::new());
     let mut add_phone = use_signal(|| String::new());
@@ -102,14 +106,20 @@ pub(crate) fn SuppliersTab() -> Element {
                 None => return,
             };
             let mut updated = suppliers_state.read().clone();
-            if let Some(entry) = updated.iter_mut().find(|s| pick_first(s, &["id", "supplier_id"]) == id) {
+            if let Some(entry) = updated
+                .iter_mut()
+                .find(|s| pick_first(s, &["id", "supplier_id"]) == id)
+            {
                 if let Some(obj) = entry.as_object_mut() {
                     if !is_valid_email(&edit_email.read()) {
                         edit_error.set(Some("Please enter a valid email address.".to_string()));
                         return;
                     }
                     obj.insert("name".to_string(), json!(edit_name.read().clone()));
-                    obj.insert("contact_name".to_string(), json!(edit_contact.read().clone()));
+                    obj.insert(
+                        "contact_name".to_string(),
+                        json!(edit_contact.read().clone()),
+                    );
                     obj.insert("phone".to_string(), json!(edit_phone.read().clone()));
                     obj.insert("email".to_string(), json!(edit_email.read().clone()));
                     obj.insert("address".to_string(), json!(edit_address.read().clone()));

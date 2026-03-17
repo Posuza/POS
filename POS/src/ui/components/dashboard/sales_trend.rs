@@ -11,14 +11,21 @@ fn catmull_rom_to_bezier(points: &[(f32, f32)]) -> String {
         let p0 = if i == 0 { points[0] } else { points[i - 1] };
         let p1 = points[i];
         let p2 = points[i + 1];
-        let p3 = if i + 2 < points.len() { points[i + 2] } else { points[points.len() - 1] };
+        let p3 = if i + 2 < points.len() {
+            points[i + 2]
+        } else {
+            points[points.len() - 1]
+        };
 
         let c1x = p1.0 + (p2.0 - p0.0) / 6.0;
         let c1y = p1.1 + (p2.1 - p0.1) / 6.0;
         let c2x = p2.0 - (p3.0 - p1.0) / 6.0;
         let c2y = p2.1 - (p3.1 - p1.1) / 6.0;
 
-        d.push_str(&format!(" C{:.1},{:.1} {:.1},{:.1} {:.1},{:.1}", c1x, c1y, c2x, c2y, p2.0, p2.1));
+        d.push_str(&format!(
+            " C{:.1},{:.1} {:.1},{:.1} {:.1},{:.1}",
+            c1x, c1y, c2x, c2y, p2.0, p2.1
+        ));
     }
 
     d
@@ -39,12 +46,19 @@ fn deterministic_color(name: &str) -> String {
 
 fn series_color(name: &str) -> String {
     let lname = name.to_lowercase();
-    if lname.contains("sales") { "#2563eb".to_string() }
-    else if lname.contains("items") || lname.contains("item") { "#7c3aed".to_string() }
-    else if lname.contains("ticket") { "#0ea5a4".to_string() }
-    else if lname.contains("stock") { "#10b981".to_string() }
-    else if lname.contains("user") || lname.contains("users") { "#f59e0b".to_string() }
-    else { deterministic_color(name) }
+    if lname.contains("sales") {
+        "#2563eb".to_string()
+    } else if lname.contains("items") || lname.contains("item") {
+        "#7c3aed".to_string()
+    } else if lname.contains("ticket") {
+        "#0ea5a4".to_string()
+    } else if lname.contains("stock") {
+        "#10b981".to_string()
+    } else if lname.contains("user") || lname.contains("users") {
+        "#f59e0b".to_string()
+    } else {
+        deterministic_color(name)
+    }
 }
 
 #[component]
@@ -52,28 +66,46 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
     let width = 420.0_f32;
     let height = 160.0_f32;
     let pad = 36.0_f32; // room for y labels
-    // When multiple series are provided, compute global min/max across all series
+                        // When multiple series are provided, compute global min/max across all series
     let mut global_max = f32::NEG_INFINITY;
     let mut global_min = f32::INFINITY;
     for (_name, s) in series.iter() {
         for v in s.iter() {
-            if *v > global_max { global_max = *v; }
-            if *v < global_min { global_min = *v; }
+            if *v > global_max {
+                global_max = *v;
+            }
+            if *v < global_min {
+                global_min = *v;
+            }
         }
     }
-    if global_max == f32::NEG_INFINITY { global_max = 1.0; }
-    if global_min == f32::INFINITY { global_min = 0.0; }
-    let range = if (global_max - global_min).abs() < std::f32::EPSILON { 1.0 } else { global_max - global_min };
+    if global_max == f32::NEG_INFINITY {
+        global_max = 1.0;
+    }
+    if global_min == f32::INFINITY {
+        global_min = 0.0;
+    }
+    let range = if (global_max - global_min).abs() < std::f32::EPSILON {
+        1.0
+    } else {
+        global_max - global_min
+    };
 
     // compute per-series coordinates and paths
-    let mut all_coords: Vec<Vec<(f32,f32)>> = Vec::new();
+    let mut all_coords: Vec<Vec<(f32, f32)>> = Vec::new();
     let mut all_paths: Vec<String> = Vec::new();
     for (_name, s) in series.iter() {
-        let coords: Vec<(f32,f32)> = s.iter().enumerate().map(|(i,v)| {
-            let x = pad + i as f32 * ((width - pad * 2.0) / ((s.len().saturating_sub(1)) as f32).max(1.0));
-            let y = pad + (1.0 - ((v - global_min) / range)) * (height - pad * 2.0);
-            (x,y)
-        }).collect();
+        let coords: Vec<(f32, f32)> = s
+            .iter()
+            .enumerate()
+            .map(|(i, v)| {
+                let x = pad
+                    + i as f32
+                        * ((width - pad * 2.0) / ((s.len().saturating_sub(1)) as f32).max(1.0));
+                let y = pad + (1.0 - ((v - global_min) / range)) * (height - pad * 2.0);
+                (x, y)
+            })
+            .collect();
         let d = catmull_rom_to_bezier(&coords);
         all_coords.push(coords);
         all_paths.push(d);
@@ -83,7 +115,10 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
     for (name, _s) in series.iter() {
         stroke_colors.push(series_color(name));
     }
-    let area_color = stroke_colors.get(0).cloned().unwrap_or_else(|| "#2563eb".to_string());
+    let area_color = stroke_colors
+        .get(0)
+        .cloned()
+        .unwrap_or_else(|| "#2563eb".to_string());
     let area_path = all_coords.get(0).and_then(|coords| {
         if coords.is_empty() {
             None
@@ -95,12 +130,19 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
             let last_x = coords.last().unwrap().0;
             let first_x = coords[0].0;
             let bottom = height - pad;
-            d.push_str(&format!(" L{:.1},{:.1} L{:.1},{:.1} Z", last_x, bottom, first_x, bottom));
+            d.push_str(&format!(
+                " L{:.1},{:.1} L{:.1},{:.1} Z",
+                last_x, bottom, first_x, bottom
+            ));
             Some(d)
         }
     });
     // latest value for first series shown on top-right
-    let latest = series.get(0).and_then(|(_name, s)| s.last()).cloned().unwrap_or(0.0);
+    let latest = series
+        .get(0)
+        .and_then(|(_name, s)| s.last())
+        .cloned()
+        .unwrap_or(0.0);
     let latest_s = format!("{:.2}", latest);
     // Precompute stringified positions and labels to avoid complex expressions inside RSX
     // Expand viewBox height so the legend (placed below the chart) is inside the SVG viewport.
@@ -129,7 +171,8 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
         let mut out: Vec<(String, String, String)> = Vec::new();
         for (i, l) in labels.iter().enumerate() {
             if i % step == 0 || i + 1 == len {
-                let x = pad + i as f32 * ((width - pad * 2.0) / (len.saturating_sub(1) as f32).max(1.0));
+                let x = pad
+                    + i as f32 * ((width - pad * 2.0) / (len.saturating_sub(1) as f32).max(1.0));
                 // shorten label (date only or first token) to keep it compact
                 let short = l.split_whitespace().next().unwrap_or(l).to_string();
                 let x_s = format!("{:.1}", x);
@@ -147,12 +190,17 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
     let x_label_y_s = format!("{:.1}", height - pad + 18.0);
     let height_minus_pad_s = format!("{:.1}", height - pad);
     // sampled vertical grid x positions (stringified) for the sampled labels
-    let vertical_xs: Vec<String> = x_label_positions.iter().map(|(_, xpos, _)| xpos.clone()).collect();
+    let vertical_xs: Vec<String> = x_label_positions
+        .iter()
+        .map(|(_, xpos, _)| xpos.clone())
+        .collect();
     // place legend at the top inside the SVG (clamped to left padding)
     // tighten per-entry spacing so more legend items fit on one line
     let legend_entry_width = 72.0_f32;
     let mut legend_start_x = width - pad - (series.len() as f32 * legend_entry_width);
-    if legend_start_x < pad { legend_start_x = pad; }
+    if legend_start_x < pad {
+        legend_start_x = pad;
+    }
     let _legend_trans = format!("translate({:.1},{:.1})", legend_start_x, pad / 2.0);
 
     // adapt marker size for dense datasets (based on points in first series)
@@ -167,7 +215,11 @@ pub fn SalesTrend(series: Vec<(String, Vec<f32>)>, x_labels: Option<Vec<String>>
     for (_si, (_name, s)) in series.iter().enumerate() {
         let mut row: Vec<String> = Vec::new();
         for (i, v) in s.iter().enumerate() {
-            let lbl = x_labels.as_ref().and_then(|l| l.get(i)).cloned().unwrap_or_else(|| format!("#{}", i+1));
+            let lbl = x_labels
+                .as_ref()
+                .and_then(|l| l.get(i))
+                .cloned()
+                .unwrap_or_else(|| format!("#{}", i + 1));
             row.push(format!("{} — {:.2}", lbl, v));
         }
         tooltip_texts.push(row);

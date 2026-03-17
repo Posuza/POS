@@ -1,7 +1,6 @@
-/// Helper functions for POS application
-
-use std::fs;
 use crate::errors::Result;
+/// Helper functions for POS application
+use std::fs;
 
 /// Ensure directories exist
 pub fn ensure_directories() -> Result<()> {
@@ -11,15 +10,13 @@ pub fn ensure_directories() -> Result<()> {
         "data/images/products",
         "data/images/profiles",
     ];
-    
+
     for dir in dirs {
-        fs::create_dir_all(dir)
-            .map_err(|e| crate::errors::PosError::FileError(format!(
-                "Failed to create directory {}: {}",
-                dir, e
-            )))?;
+        fs::create_dir_all(dir).map_err(|e| {
+            crate::errors::PosError::FileError(format!("Failed to create directory {}: {}", dir, e))
+        })?;
     }
-    
+
     Ok(())
 }
 
@@ -41,7 +38,7 @@ pub fn get_file_size(path: &str) -> Result<u64> {
 pub fn format_bytes(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
     let mut size = bytes as f64;
-    
+
     for (i, unit) in UNITS.iter().enumerate() {
         if size < 1024.0 || i == UNITS.len() - 1 {
             if i == 0 {
@@ -52,21 +49,21 @@ pub fn format_bytes(bytes: u64) -> String {
         }
         size /= 1024.0;
     }
-    
+
     format!("{:.2} B", bytes)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_format_bytes() {
         assert_eq!(format_bytes(512), "512 B");
         assert!(format_bytes(1024).contains("KB"));
         assert!(format_bytes(1024 * 1024).contains("MB"));
     }
-    
+
     #[test]
     fn test_generate_filename() {
         let filename = generate_filename("product", "jpg");

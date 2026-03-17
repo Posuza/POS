@@ -1,11 +1,11 @@
-use dioxus::prelude::*;
-use crate::data::models::user::User;
-use crate::ui::components::Navbar;
 use crate::config::constants::APP_NAME;
-use crate::utils::formatters::format_price;
-use crate::data::json_store::get_store;
-use crate::services::image_service::ImageService;
 use crate::config::constants::PRODUCTS_IMAGES_DIR;
+use crate::data::json_store::get_store;
+use crate::data::models::user::User;
+use crate::services::image_service::ImageService;
+use crate::ui::components::Navbar;
+use crate::utils::formatters::format_price;
+use dioxus::prelude::*;
 
 #[component]
 pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
@@ -87,7 +87,10 @@ pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
         // In real app, save transaction to database (scans table)
         let t: f32 = *total.read();
         let pm = payment_method.read().clone();
-        message.set(Some(format!("✅ Sale complete! Total: ${:.2} via {}", t, pm)));
+        message.set(Some(format!(
+            "✅ Sale complete! Total: ${:.2} via {}",
+            t, pm
+        )));
         cart.write().clear();
         total.set(0.0);
         show_checkout_modal.set(false);

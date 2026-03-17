@@ -10,7 +10,9 @@ pub(crate) fn ProductReportTab() -> Element {
     for item in sale_items.iter() {
         let product_id = pick_first(item, &["product_id", "productId", "id"]);
         let qty = value_i32(item, "quantity").unwrap_or(0);
-        let total = value_f32(item, "line_total").or_else(|| value_f32(item, "total")).unwrap_or(0.0);
+        let total = value_f32(item, "line_total")
+            .or_else(|| value_f32(item, "total"))
+            .unwrap_or(0.0);
         let entry = totals.entry(product_id).or_insert((0, 0.0));
         entry.0 += qty;
         entry.1 += total;
@@ -22,14 +24,23 @@ pub(crate) fn ProductReportTab() -> Element {
         .products
         .iter()
         .filter(|p| {
-            let cat_ok = category_filter.read().as_str() == "All" || p.category == *category_filter.read();
+            let cat_ok =
+                category_filter.read().as_str() == "All" || p.category == *category_filter.read();
             let brand_ok = brand_filter.read().as_str() == "All"
-                || p.name.to_lowercase().contains(&brand_filter.read().to_lowercase());
+                || p.name
+                    .to_lowercase()
+                    .contains(&brand_filter.read().to_lowercase());
             cat_ok && brand_ok
         })
         .map(|p| {
             let (qty, total) = totals.get(&p.id).cloned().unwrap_or((0, 0.0));
-            (p.barcode.clone(), p.name.clone(), p.category.clone(), qty.to_string(), format_price(total))
+            (
+                p.barcode.clone(),
+                p.name.clone(),
+                p.category.clone(),
+                qty.to_string(),
+                format_price(total),
+            )
         })
         .collect();
 

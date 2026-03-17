@@ -19,7 +19,10 @@ pub(crate) fn SalesReportTab() -> Element {
             status_ok && start_ok && end_ok
         })
         .map(|s| {
-            let customer = s.customer_id.clone().unwrap_or_else(|| "Walk-in".to_string());
+            let customer = s
+                .customer_id
+                .clone()
+                .unwrap_or_else(|| "Walk-in".to_string());
             let amount = format_price(s.total);
             let status = s.status.clone();
             (s.receipt_no.clone(), customer, amount, status)

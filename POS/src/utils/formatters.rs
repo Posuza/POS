@@ -44,13 +44,13 @@ pub fn format_username(username: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_format_price() {
         assert_eq!(format_price(10.5), "$10.50");
         assert_eq!(format_price(1000.0), "$1000.00");
     }
-    
+
     #[test]
     fn test_truncate_string() {
         assert_eq!(truncate_string("hello", 10), "hello");

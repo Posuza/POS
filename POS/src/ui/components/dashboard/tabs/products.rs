@@ -63,7 +63,7 @@ pub(crate) fn ProductsTab() -> Element {
         .last()
         .map(|s| format_datetime(&s.created_at))
         .unwrap_or_else(|| "No recent updates".to_string());
-    
+
     let handle_add_product = {
         let mut products_state = products_state.clone();
         let mut add_error = add_error.clone();
@@ -98,12 +98,17 @@ pub(crate) fn ProductsTab() -> Element {
             };
             let mut updated = products_state.read().clone();
             if updated.iter().any(|p| p.barcode == *product_barcode.read()) {
-                add_error.set(Some("A product with this barcode already exists.".to_string()));
+                add_error.set(Some(
+                    "A product with this barcode already exists.".to_string(),
+                ));
                 return;
             }
             let mut image_filename: Option<String> = None;
             let mut image_type: Option<String> = None;
-            if let (Some(payload), Some(img_type)) = (product_image_payload.read().clone(), product_image_type.read().clone()) {
+            if let (Some(payload), Some(img_type)) = (
+                product_image_payload.read().clone(),
+                product_image_type.read().clone(),
+            ) {
                 match ImageService::save_product_image(&payload, &img_type) {
                     Ok(filename) => {
                         image_filename = Some(filename);
@@ -123,7 +128,11 @@ pub(crate) fn ProductsTab() -> Element {
                 description: None,
                 price,
                 quantity: stock,
-                category: if product_category.read().is_empty() { "Uncategorized".to_string() } else { product_category.read().clone() },
+                category: if product_category.read().is_empty() {
+                    "Uncategorized".to_string()
+                } else {
+                    product_category.read().clone()
+                },
                 product_image: image_filename,
                 product_image_type: image_type,
                 created_at: now.clone(),
@@ -153,13 +162,15 @@ pub(crate) fn ProductsTab() -> Element {
             }
         }
     };
-    
+
     // Render rows from JSON products inline (rsx expects an iterator)
     let mut products_sorted: Vec<_> = products.iter().cloned().collect();
     products_sorted.sort_by(|a, b| {
         let a_val = a.price * a.quantity as f32;
         let b_val = b.price * b.quantity as f32;
-        b_val.partial_cmp(&a_val).unwrap_or(std::cmp::Ordering::Equal)
+        b_val
+            .partial_cmp(&a_val)
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
     let low_stock_items: Vec<_> = products
         .iter()
@@ -192,13 +203,21 @@ pub(crate) fn ProductsTab() -> Element {
         }
 
         let mut updated = products_state.read().clone();
-        if updated.iter().any(|p| p.barcode == *edit_product_barcode.read() && p.id != id) {
-            edit_error.set(Some("Another product already uses this barcode.".to_string()));
+        if updated
+            .iter()
+            .any(|p| p.barcode == *edit_product_barcode.read() && p.id != id)
+        {
+            edit_error.set(Some(
+                "Another product already uses this barcode.".to_string(),
+            ));
             return;
         }
         let mut image_filename = edit_product_image_name.read().clone();
         let mut image_type = edit_product_image_type.read().clone();
-        if let (Some(payload), Some(img_type)) = (edit_product_image_payload.read().clone(), edit_product_image_type.read().clone()) {
+        if let (Some(payload), Some(img_type)) = (
+            edit_product_image_payload.read().clone(),
+            edit_product_image_type.read().clone(),
+        ) {
             match ImageService::save_product_image(&payload, &img_type) {
                 Ok(filename) => {
                     image_filename = Some(filename);
@@ -257,17 +276,18 @@ pub(crate) fn ProductsTab() -> Element {
         })
         .collect();
     let sort_key = product_sort.read().clone();
-    filtered_products.sort_by(|a, b| {
-        match sort_key.as_str() {
-            "stock" => a.quantity.cmp(&b.quantity),
-            "price" => a.price.partial_cmp(&b.price).unwrap_or(std::cmp::Ordering::Equal),
-            "value" => {
-                let av = a.price * a.quantity as f32;
-                let bv = b.price * b.quantity as f32;
-                av.partial_cmp(&bv).unwrap_or(std::cmp::Ordering::Equal)
-            }
-            _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
+    filtered_products.sort_by(|a, b| match sort_key.as_str() {
+        "stock" => a.quantity.cmp(&b.quantity),
+        "price" => a
+            .price
+            .partial_cmp(&b.price)
+            .unwrap_or(std::cmp::Ordering::Equal),
+        "value" => {
+            let av = a.price * a.quantity as f32;
+            let bv = b.price * b.quantity as f32;
+            av.partial_cmp(&bv).unwrap_or(std::cmp::Ordering::Equal)
         }
+        _ => a.name.to_lowercase().cmp(&b.name.to_lowercase()),
     });
     if product_order.read().as_str() == "desc" {
         filtered_products.reverse();
@@ -285,8 +305,20 @@ pub(crate) fn ProductsTab() -> Element {
 
     let mut product_rows: Vec<Element> = Vec::new();
     for p in page_items.into_iter() {
-        let status = if p.quantity == 0 { "Out" } else if p.quantity < LOW_STOCK_THRESHOLD { "Low" } else { "OK" };
-        let status_class = if p.quantity == 0 { "status-chip danger" } else if p.quantity < LOW_STOCK_THRESHOLD { "status-chip warning" } else { "status-chip ok" };
+        let status = if p.quantity == 0 {
+            "Out"
+        } else if p.quantity < LOW_STOCK_THRESHOLD {
+            "Low"
+        } else {
+            "OK"
+        };
+        let status_class = if p.quantity == 0 {
+            "status-chip danger"
+        } else if p.quantity < LOW_STOCK_THRESHOLD {
+            "status-chip warning"
+        } else {
+            "status-chip ok"
+        };
         let pid = p.id.clone();
         let pname = p.name.clone();
         let pbarcode = p.barcode.clone();
@@ -408,7 +440,7 @@ pub(crate) fn ProductsTab() -> Element {
                     }
                 }
             }
-            
+
             if edit_save_msg.read().clone() {
                 div { class: "message",
                     "✅ Product updated successfully!"
@@ -503,7 +535,7 @@ pub(crate) fn ProductsTab() -> Element {
                     "Next"
                 }
             }
-            
+
             if show_add_modal.read().clone() {
                 div { class: "modal",
                     div { class: "modal-content",

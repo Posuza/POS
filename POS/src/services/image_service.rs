@@ -1,8 +1,8 @@
-use std::path::Path;
+use base64::Engine;
+use chrono::Local;
 use std::fs;
 use std::io::Read;
-use chrono::Local;
-use base64::Engine;
+use std::path::Path;
 use uuid::Uuid;
 
 pub struct ImageService;
@@ -10,10 +10,7 @@ pub struct ImageService;
 impl ImageService {
     /// Save product image (base64 payload) to products folder and return the stored filename.
     /// Images stored in: `data/images/products/`
-    pub fn save_product_image(
-        base64_data: &str,
-        image_type: &str,
-    ) -> Result<String, String> {
+    pub fn save_product_image(base64_data: &str, image_type: &str) -> Result<String, String> {
         let dir = crate::config::constants::PRODUCTS_IMAGES_DIR;
         fs::create_dir_all(dir).map_err(|e| e.to_string())?;
 
@@ -42,7 +39,13 @@ impl ImageService {
 
         let timestamp = Local::now().format("%Y%m%d_%H%M%S_%f").to_string();
         // include user id for easier debugging/lookup
-        let filename = format!("user_{}_{}_{}.{}", user_id, timestamp, Uuid::new_v4(), image_type);
+        let filename = format!(
+            "user_{}_{}_{}.{}",
+            user_id,
+            timestamp,
+            Uuid::new_v4(),
+            image_type
+        );
         let file_path = format!("{}/{}", dir, filename);
 
         let decoded = base64::engine::general_purpose::STANDARD
@@ -55,7 +58,11 @@ impl ImageService {
     }
 
     /// Load image from filename (in `folder`) and return as data URL `data:image/{type};base64,{payload}`
-    pub fn get_image_data_url(filename: &str, image_type: &str, folder: &str) -> Result<String, String> {
+    pub fn get_image_data_url(
+        filename: &str,
+        image_type: &str,
+        folder: &str,
+    ) -> Result<String, String> {
         // If `filename` already looks like a data URL, return it directly
         if filename.starts_with("data:") {
             return Ok(filename.to_string());

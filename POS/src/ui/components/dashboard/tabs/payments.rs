@@ -14,21 +14,37 @@ pub(crate) fn PaymentsTab() -> Element {
         .iter()
         .filter(|p| value_is(p, "status", "paid") || p.get("status").is_none())
         .count();
-    let pending = payments.iter().filter(|p| value_is(p, "status", "pending")).count();
-    let failed = payments.iter().filter(|p| value_is(p, "status", "failed")).count();
+    let pending = payments
+        .iter()
+        .filter(|p| value_is(p, "status", "pending"))
+        .count();
+    let failed = payments
+        .iter()
+        .filter(|p| value_is(p, "status", "failed"))
+        .count();
     let total_amount: f32 = payments
         .iter()
-        .map(|p| value_f32(p, "amount").or_else(|| value_f32(p, "total")).unwrap_or(0.0))
+        .map(|p| {
+            value_f32(p, "amount")
+                .or_else(|| value_f32(p, "total"))
+                .unwrap_or(0.0)
+        })
         .sum();
     let mut method_totals: HashMap<String, (i32, f32)> = HashMap::new();
     let mut daily_totals: HashMap<String, f32> = HashMap::new();
     for p in payments.iter() {
         let method = pick_first(p, &["method", "type", "channel"]);
-        let amount = value_f32(p, "amount").or_else(|| value_f32(p, "total")).unwrap_or(0.0);
+        let amount = value_f32(p, "amount")
+            .or_else(|| value_f32(p, "total"))
+            .unwrap_or(0.0);
         let entry = method_totals.entry(method).or_insert((0, 0.0));
         entry.0 += 1;
         entry.1 += amount;
-        let day = pick_first(p, &["paid_at", "created_at", "date"]).split('T').next().unwrap_or("—").to_string();
+        let day = pick_first(p, &["paid_at", "created_at", "date"])
+            .split('T')
+            .next()
+            .unwrap_or("—")
+            .to_string();
         *daily_totals.entry(day).or_insert(0.0) += amount;
     }
     let mut method_vec: Vec<(String, i32, f32)> = method_totals

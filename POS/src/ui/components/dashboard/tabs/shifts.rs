@@ -4,8 +4,14 @@ use super::prelude::*;
 pub(crate) fn ShiftsTab() -> Element {
     let store = get_store_fresh();
     let shifts = extra_list("shifts.json");
-    let open_shifts = shifts.iter().filter(|s| value_is(s, "status", "open")).count();
-    let closed_shifts = shifts.iter().filter(|s| value_is(s, "status", "closed")).count();
+    let open_shifts = shifts
+        .iter()
+        .filter(|s| value_is(s, "status", "open"))
+        .count();
+    let closed_shifts = shifts
+        .iter()
+        .filter(|s| value_is(s, "status", "closed"))
+        .count();
 
     rsx! {
         div { class: "content-card",

@@ -1,8 +1,7 @@
-/// Scan queries module
-
-use sqlx::{SqlitePool, Row};
-use uuid::Uuid;
 use chrono::Local;
+/// Scan queries module
+use sqlx::{Row, SqlitePool};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, sqlx::FromRow, serde::Serialize)]
 pub struct ScanDB {
@@ -25,11 +24,11 @@ pub async fn create_scan(
 ) -> Result<ScanDB, sqlx::Error> {
     let id = Uuid::new_v4().to_string();
     let now = Local::now().to_rfc3339();
-    
+
     sqlx::query_as::<_, ScanDB>(
         "INSERT INTO scans (id, product_id, staff_id, barcode, quantity, price, scanned_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?) 
-         RETURNING *"
+         RETURNING *",
     )
     .bind(id)
     .bind(product_id)
@@ -48,7 +47,7 @@ pub async fn get_scans_for_user(
     limit: i64,
 ) -> Result<Vec<ScanDB>, sqlx::Error> {
     sqlx::query_as::<_, ScanDB>(
-        "SELECT * FROM scans WHERE staff_id = ? ORDER BY scanned_at DESC LIMIT ?"
+        "SELECT * FROM scans WHERE staff_id = ? ORDER BY scanned_at DESC LIMIT ?",
     )
     .bind(staff_id)
     .bind(limit)
@@ -56,19 +55,17 @@ pub async fn get_scans_for_user(
     .await
 }
 
-pub async fn get_today_sales(
-    db: &SqlitePool,
-) -> Result<(i32, f32), sqlx::Error> {
+pub async fn get_today_sales(db: &SqlitePool) -> Result<(i32, f32), sqlx::Error> {
     let row = sqlx::query(
         "SELECT COUNT(*) as count, SUM(quantity * price) as total 
          FROM scans 
-         WHERE DATE(scanned_at) = DATE('now')"
+         WHERE DATE(scanned_at) = DATE('now')",
     )
     .fetch_one(db)
     .await?;
-    
+
     let count: i32 = row.get("count");
     let total: f32 = row.get::<Option<f64>, _>("total").unwrap_or(0.0) as f32;
-    
+
     Ok((count, total))
 }

@@ -1,5 +1,4 @@
 /// Card component
-
 use dioxus::prelude::*;
 
 /// Stat card component

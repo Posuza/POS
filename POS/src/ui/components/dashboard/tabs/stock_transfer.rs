@@ -14,7 +14,10 @@ pub(crate) fn StockTransferTab() -> Element {
         .filter(|item| value_is(item, "movement_type", "out"))
         .map(|item| {
             let product_id = pick_first(item, &["product_id"]);
-            let product = product_lookup.get(&product_id).cloned().unwrap_or_else(|| "Unknown".to_string());
+            let product = product_lookup
+                .get(&product_id)
+                .cloned()
+                .unwrap_or_else(|| "Unknown".to_string());
             let qty = pick_first(item, &["quantity"]);
             let reason = pick_first(item, &["reason"]);
             let date = pick_first(item, &["created_at"]);

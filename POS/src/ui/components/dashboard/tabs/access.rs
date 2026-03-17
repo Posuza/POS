@@ -37,9 +37,12 @@ pub(crate) fn AccessTab() -> Element {
     let mut access_msg = use_signal(|| None::<String>);
     let mut access_error = use_signal(|| None::<String>);
     let mut roles_owned: Vec<serde_json::Value> = roles.iter().map(|r| (*r).clone()).collect();
-    let mut permissions_owned: Vec<serde_json::Value> = permissions.iter().map(|p| (*p).clone()).collect();
-    let mut role_permissions_owned: Vec<serde_json::Value> = role_permissions.iter().map(|rp| (*rp).clone()).collect();
-    let mut user_roles_owned: Vec<serde_json::Value> = user_roles.iter().map(|ur| (*ur).clone()).collect();
+    let mut permissions_owned: Vec<serde_json::Value> =
+        permissions.iter().map(|p| (*p).clone()).collect();
+    let mut role_permissions_owned: Vec<serde_json::Value> =
+        role_permissions.iter().map(|rp| (*rp).clone()).collect();
+    let mut user_roles_owned: Vec<serde_json::Value> =
+        user_roles.iter().map(|ur| (*ur).clone()).collect();
 
     rsx! {
         div { class: "content-card",
