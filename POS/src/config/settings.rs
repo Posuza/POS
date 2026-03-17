@@ -1,6 +1,6 @@
 /// Application settings and configuration
 
-use std::sync::{Once, OnceLock};
+use std::sync::OnceLock;
 
 /// Application settings
 #[derive(Debug, Clone)]

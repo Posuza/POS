@@ -2,7 +2,10 @@
 .sales-trend { }
 .sales-trend .sales-chart {
   width: 100%;
-  height: base-(auto) xs-(120px); /* keeps aspect ratio responsive */
+  height: auto;
+  aspect-ratio: 21 / 8;
+  min-height: 220px;
+  max-height: 340px;
   display: block;
 }
 .sales-trend .chart-legend { font-size: base-(13px) md-(11px); fill: var(--muted-color); }

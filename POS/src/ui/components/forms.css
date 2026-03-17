@@ -4,25 +4,54 @@
 .form-group label {
   display: block;
   margin-bottom: 4px;
-  font-weight: 500;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--grey-600);
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
   font-family: inherit;
+  background: #fff;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-left,
+.input-icon-right {
+  position: absolute;
+  color: var(--grey-400);
+  font-size: 14px;
+}
+
+.input-icon-left { left: 12px; }
+.input-icon-right { right: 12px; }
+
+.input-group input,
+.input-group select {
+  padding-left: 34px;
+}
+
+.input-group.input-right input,
+.input-group.input-right select {
+  padding-right: 34px;
+  padding-left: 12px;
 }
 
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(255, 159, 67, 0.2);
 }

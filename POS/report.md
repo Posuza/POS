@@ -1,162 +1,180 @@
-# POS UI Full Audit Report
+# POS UI Full Audit Report (Admin Dashboard)
 
 Date: 2026-03-16
-Scope: Admin dashboard tabs and supporting UI in `POS/src/ui/pages/admin.rs`, related styles in `POS/src/ui/pages/admin.css`, chart component in `POS/src/ui/components/dashborads/sales_trend.rs`.
+Scope: Admin dashboard and admin tabs in `POS/src/ui/pages/admin.rs`, supporting styles in `POS/src/ui/pages/admin.css`, chart component in `POS/src/ui/components/dashborads/sales_trend.rs`, settings persistence in `POS/src/config/ui_settings.rs`.
 
 ## Executive Summary
-The admin UI is visually strong and consistent, with a well-structured dashboard and usable data tables. The main gaps are in action realism, cross-tab data consistency, and missing operational workflows (editing, filtering, exporting, and drill‑downs). Most tabs render static or placeholder actions and lack validation, empty-state guidance, and consistent KPI calculation logic.
+The admin UI now mirrors the reference design language and includes the full set of inventory/stock/report pages. It supports real metrics, product/sales editing with JSON persistence, CSV exports, normalized status actions, search/sort/pagination across key tabs, and access control workflows. New admin pages were added for warehouse/store/biller management, inventory master data (brands/units/variants/warranties/categories), stock workflows, and report pages. Remaining work is mostly data normalization, wiring create/edit actions to persistence, and advanced analytics.
 
-## High Priority Issues
-1. Actions are non-functional placeholders in most tabs (Edit, Delete, Void, View, Add). Users cannot complete core workflows.
-2. Mixed metrics sources across tabs lead to inconsistent numbers (sales, products, users), especially for “completed vs paid” states.
-3. Several tabs rely on generic placeholders rather than real operational data (Settings confirmation, Payments settlement notes, Shifts coverage notes).
-4. No filter/search/sort on large tables (Products, Sales, Staff, Customers), which will not scale.
+## Major Features Implemented
+1. **Dashboard metrics**: real daily sales/items/ticket series; category revenue donut; product performance by sale items.
+2. **Product editing + persistence**: edit modal writes to `data/json/products.json`.
+3. **Sales management**: status normalization + voiding persists to `data/json/sales.json`.
+4. **Sales drill‑down**: per‑sale modal with line items.
+5. **CSV exports**:
+   - Payments exports to `data/json/exports/`.
+   - Products exports to `data/json/exports/products_export.csv`.
+   - Sales exports to `data/json/exports/sales_export.csv`.
+   - Staff exports to `data/json/exports/staff_export.csv`.
+   - Customers exports to `data/json/exports/customers_export.csv`.
+6. **Settings**: persisted to `data/json/app_settings.json`, currency applied globally.
+7. **Search/sort/pagination**: Products, Sales, Staff, Customers.
+8. **UI restyle**: new admin toolbars, cards, grouped sidebar, and report KPIs aligned to the provided UI.
+9. **New pages added**: Create Product, Expired Products, Low Stocks, Categories/Sub‑Categories, Brands, Units, Variant Attributes, Warranties.
+10. **Stock workflows**: Manage Stock, Stock Adjustment, Stock Transfer.
+11. **Org directories**: Warehouses, Stores, Billers.
+12. **Reports**: Invoice, Supplier, Customer, Product, Inventory, Purchase, Sales.
+13. **Print utilities**: Print Barcode + Print QR Code layouts.
+14. **Analytics added**: Staff top performers and customer repeat rate.
+15. **Access Control workflows**: add roles, permissions, role‑permission links, and user‑role assignments with JSON persistence.
+16. **Master data CRUD**: add/edit/delete for Categories, Sub‑Categories, Brands, Units, Variant Attributes, Warranties, Warehouses, Stores, Billers (persisted to JSON).
+17. **Report filters**: date/status filters on Sales Report; category/brand filters on Product Report; category filters on Inventory Report.
+18. **Global design tokens**: added `:root` color, radius, shadow, and typography variables (Nunito Sans) for the whole system.
+19. **Sidebar restyle**: switched admin sidebar to light UI with grouped sections, orange active state, and reference spacing.
+20. **Typography & inputs**: standardized heading/body sizes + input icon utilities; updated forms/buttons to use tokens.
+21. **POS sidebar parity**: applied the same light sidebar treatment to POS sidebar styles and aligned POS page components to tokens.
+22. **Sidebar expansion**: admin sidebar now matches the full DreamsPOS reference menu with placeholders.
+23. **Input icons wired**: search inputs + key filters now render icon markup; POS barcode input uses the same input-group pattern.
 
-## Dashboard Tab Audit
-Status: Updated, real metrics partially wired.
+## Remaining Gaps / Issues
+### High Priority
+1. **Data normalization**
+   - Add explicit `status` to `payments.json` if missing (UI button exists).
+   - Ensure consistent `sales.status` values in JSON (`paid | pending | voided`).
+2. **Wire create/edit actions for remaining pages**
+   - Reports and stock pages still read‑only.
 
-Findings:
-- Sales chart now uses real daily aggregation from `sales.json` and `sale_items.json`.
-- Category donut now uses revenue by category, but category labels in the list show revenue while the label text still implies “items.”
-- Top alerts are static and not connected to real data.
-- “Last Activity” still uses sales and shows cashier id only.
-- Product Performance is now based on `sale_items.json` revenue, but columns and labels should align with “Sold / Stock / Avg Price / Revenue.”
+### Medium Priority
+1. **Inventory valuation**
+   - Category value + reorder recommendations (basic view exists, expand with reorder points).
+2. **Customer analytics**
+   - Lifetime value, cohorting, churn trends.
+3. **Staff analytics**
+   - Shift coverage + sales per shift.
+4. **Reports data fidelity**
+   - Map supplier/customer IDs to real totals and balances.
 
-Recommendations:
-1. Rename “Top Categories” list label to reflect revenue (“$ total” or “Revenue”).
-2. Wire alerts to actual conditions (low stock, out-of-stock, pending payments).
-3. Add quick filters (“Last 7d / 30d / All time”) for chart with real filtering logic.
-4. Add trend deltas using period-over-period calculations for KPIs.
+### Lower Priority
+1. **Access control UX**
+   - Replace text inputs with dropdowns/autocomplete for roles/permissions/users.
+2. **Suppliers / Shifts**
+   - Link suppliers to stock and shifts to sales totals.
 
-## Products Tab Audit
-Status: Functional table UI, add modal is placeholder.
+## Tab‑by‑Tab Status
+### Dashboard
+- ✅ Real metrics and charts.
+- 🔶 Alerts still static.
 
-Findings:
-- Table renders from JSON but no search, sort, or pagination.
-- Add Product modal has no validation beyond required name/barcode.
-- Image upload is not implemented and no preview storage pipeline exists.
-- Duplicate summary blocks are present but not connected to actions.
+### Products
+- ✅ Edit + persist.
+- ✅ Search/sort/pagination.
+- ✅ CSV export.
 
-Recommendations:
-1. Add search and category filter in header.
-2. Add low-stock filter and a stock reorder suggestion block.
-3. Provide inline “Edit” modal with validation and data binding.
-4. Add bulk actions (export, import, price update).
+### Sales
+- ✅ Filters, voiding, detail modal.
+- ✅ Search/sort/pagination.
+- ✅ CSV export.
+- ✅ Normalize status action.
 
-## Sales Tab Audit
-Status: Core table exists, actions are placeholders.
+### Staff
+- ✅ Search/sort/pagination.
+- ✅ CSV export.
+- ✅ Top staff performance (sales volume).
+- 🔶 No edit workflows.
 
-Findings:
-- Completed vs pending uses `status == "completed"` but `sales.json` uses `paid`.
-- No drill-down view for line items per sale.
-- “Sale Items” panel uses generic keys without currency formatting.
+### Customers
+- ✅ Search/sort/pagination.
+- ✅ CSV export.
+- ✅ Repeat rate + unique customers.
+- 🔶 No segmentation or profiles.
 
-Recommendations:
-1. Align status logic with data (`paid` vs `completed`) or normalize in data layer.
-2. Add expandable row or side panel with `sale_items.json` detail.
-3. Add filters by cashier, payment method, date range.
+### Inventory
+- ✅ Threshold view + valuation + reorder insights.
+- 🔶 Expand reorder logic with reorder points.
 
-## Staff Tab Audit
-Status: Table and add modal exist but actions are placeholders.
+### Payments
+- ✅ CSV export and breakdowns.
+- ✅ Normalize status action.
 
-Findings:
-- Role and status display is present but no edit flow.
-- Profile image upload not wired.
-- No staff performance metrics (sales per staff, shift attendance).
+### Access
+- ✅ Add roles, permissions, and assignments (JSON‑backed).
+- 🔶 Dropdown UX needed.
 
-Recommendations:
-1. Add edit modal with role/status toggle.
-2. Connect staff to sales and shifts to show performance KPIs.
+### Suppliers
+- 🔶 Directory only.
 
-## Customers Tab Audit
-Status: Partial with insights placeholder.
+### Shifts
+- 🔶 List only.
 
-Findings:
-- Uses extra JSON for customers, no detail or segmentation.
-- No loyalty, frequency, or top customer metrics.
+### Settings
+- ✅ Persisted and applied currency.
 
-Recommendations:
-1. Add “Top Customers” and “Repeat Rate” metrics.
-2. Add customer profile drawer with history.
+### New Pages (Design + Data Hooks)
+- ✅ Warehouses, Stores, Billers (table layouts wired to JSON).
+- ✅ Brands, Units, Variant Attributes, Warranties.
+- ✅ Categories and Sub‑Categories.
+- ✅ Expired Products, Low Stocks.
+- ✅ Manage Stock, Stock Adjustment, Stock Transfer (inventory movements).
+- ✅ Report pages and Print Barcode/QR layouts.
+- 🔶 Create/edit/save actions still need persistence wiring.
 
-## Inventory Tab Audit
-Status: Basic operational view.
+## Recommended Next Steps
+1. Normalize JSON status fields (payments + sales) via data migration.
+2. Add dropdown selectors for Access Control workflows.
+3. Expand inventory reorder logic with per‑product reorder points.
+4. Add advanced customer analytics (LTV, cohorts).
+5. Wire create/edit flows for the new admin master data pages.
 
-Findings:
-- Recent movements rely on `inventory_movements.json` but don’t connect to product data.
-- Categories panel is static and doesn’t show counts or value.
+## UI Asset Coverage (2026-03-17)
+Legend: ✅ implemented, 🔶 partially implemented, ❌ missing, ⏭️ out of admin scope.
 
-Recommendations:
-1. Add product stock valuation per category.
-2. Flag inventory movements that drop below reorder threshold.
+| Asset | Mapped UI | Status | Notes |
+| --- | --- | --- | --- |
+| Dashboard.jpg | Dashboard | ✅ | Matches `dashboard-v2` layout. |
+| Sales Dashboard.jpg | Sales dashboard | 🔶 | No dedicated sales dashboard page; covered by Dashboard + Sales tab. |
+| Sales Report.jpg | Sales Report | ✅ | Report table + filters. |
+| Purchase Report.svg | Purchase Report | ✅ | Report table + filters. |
+| Inventory Report.jpg | Inventory Report | ✅ | Report table + filters. |
+| Invoice Report.svg | Invoice Report | ✅ | Report table + filters. |
+| Supplier Report  - Supplier Report.svg | Supplier Report | ✅ | Report table + filters. |
+| Customer Report  - Customer Report.svg | Customer Report | ✅ | Report table + filters. |
+| Product Report - Product Report.svg | Product Report | ✅ | Report table + filters. |
+| Products.jpg | Products | ✅ | List, edit, export. |
+| Create - Single Product.jpg | Create Product | 🔶 | UI only; no persistence wiring. |
+| Expired Products.png | Expired Products | ✅ | List + filters. |
+| Low Stocks.png | Low Stocks | ✅ | List + filters. |
+| Category.png | Category | ✅ | CRUD UI + JSON persistence. |
+| Sub Category.png | Sub Category | ✅ | CRUD UI + JSON persistence. |
+| Brand.png | Brands | ✅ | CRUD UI + JSON persistence. |
+| Units.png | Units | ✅ | CRUD UI + JSON persistence. |
+| Variant Attributes.png | Variant Attributes | ✅ | CRUD UI + JSON persistence. |
+| Warranties.png | Warranties | ✅ | CRUD UI + JSON persistence. |
+| Print Barcode.png | Print Barcode | ✅ | Print layout implemented. |
+| Print QR code.png | Print QR Code | ✅ | Print layout implemented. |
+| Warehouses.jpg | Warehouses | ✅ | CRUD UI + JSON persistence. |
+| Stores.png | Stores | ✅ | CRUD UI + JSON persistence. |
+| Billers.jpg | Billers | ✅ | CRUD UI + JSON persistence. |
+| Manage Stock.jpg | Manage Stock | ✅ | Stock movements UI. |
+| Stock Adjustment.png | Stock Adjustment | ✅ | Stock adjustments UI. |
+| Stock Transfer.png | Stock Transfer | ✅ | Stock transfer UI. |
+| Customers.jpg | Customers | ✅ | List + insights + export. |
+| Customers Overview.svg | Customers overview | ✅ | Covered by Customers insights card. |
+| Add Customer.png | Add Customer | ❌ | No create customer form yet. |
+| Suppliers.jpg | Suppliers | 🔶 | Directory only, no edit/create. |
+| Super Admin Dashboard.png | Super Admin | 🔶 | UI present; controls static. |
+| Companies Card.svg | Dashboard cards | ✅ | Summary card patterns present. |
+| Financial Summary Cards.svg | Dashboard cards | ✅ | Summary card patterns present. |
+| Summary Cards.svg | Dashboard cards | ✅ | Summary card patterns present. |
+| Revenue Card.svg | Dashboard cards | ✅ | Summary card patterns present. |
+| Top Plans Card.svg | Dashboard cards | ✅ | Summary card patterns present. |
+| Sales Container.svg | Dashboard chart | ✅ | Sales & Purchase panel present. |
+| Sales & Purchase Container.svg | Dashboard chart | ✅ | Sales & Purchase panel present. |
+| Overall Information Content.svg | Dashboard overall info | ✅ | Overall Information panel present. |
+| Container.svg | Dashboard cards | ✅ | Card layouts present. |
+| Container-1.svg | Dashboard cards | ✅ | Card layouts present. |
+| Container-2.svg | Dashboard cards | ✅ | Card layouts present. |
+| Container-3.svg | Dashboard cards | ✅ | Card layouts present. |
+| Container-4.svg | Dashboard cards | ✅ | Card layouts present. |
+| Frame 1321318215.svg | Dashboard topbar | ✅ | Topbar + search + range present. |
 
-## Payments Tab Audit
-Status: Basic list, no operational workflows.
-
-Findings:
-- Payments are listed but no link to sales or receipts.
-- “Settlement Notes” is placeholder.
-
-Recommendations:
-1. Add payment method breakdown and daily totals.
-2. Add reconciliation status and export for accounting.
-
-## Access Control Tab Audit
-Status: Good baseline for visibility, no workflows.
-
-Findings:
-- Roles/permissions lists are static, no assignment actions.
-
-Recommendations:
-1. Add role management modal and permission checklist UI.
-2. Add user-role assignment UI with validation.
-
-## Suppliers Tab Audit
-Status: Simple list view.
-
-Findings:
-- No supplier performance metrics.
-
-Recommendations:
-1. Add last delivery, average lead time, active product count.
-
-## Shifts Tab Audit
-Status: Basic list.
-
-Findings:
-- No tie-in with staff or sales per shift.
-- Coverage notes are placeholder.
-
-Recommendations:
-1. Show shift totals: sales, transactions, staff count.
-2. Add shift approval and closeout summary.
-
-## Settings Tab Audit
-Status: Static settings.
-
-Findings:
-- Settings are not persisted.
-- Currency does not apply across UI formatting.
-
-Recommendations:
-1. Store settings to JSON and apply currency formatting globally.
-2. Add business address, tax rate, and receipt footer configuration.
-
-## Cross-Cutting UI Recommendations
-1. Add global search and quick filters across all data tabs.
-2. Standardize empty state wording and actions.
-3. Add consistent KPI cards per tab header with trend deltas.
-4. Add export buttons (CSV/PDF) on table-heavy tabs.
-
-## Data Consistency Checklist
-1. Normalize sales status values (`paid`, `completed`, `pending`).
-2. Ensure sale items always link to products via `product_id`.
-3. Add optional `cost_price` to products for profit analytics.
-4. Use a shared formatter for currency and dates.
-
-## Next Implementation Plan (Suggested)
-1. Fix Sales status mapping and add sale detail view.
-2. Add Product edit flow and inventory thresholds.
-3. Add payments breakdown and reconciliation export.
-4. Persist settings and apply currency globally.
-
+Out of admin scope (POS or branding assets): `POS Design 1.jpg`, `POS Design 2.png`, `POS Design 3.jpg`, `POS Design 4.jpg`, `POS Design 5.jpg`, `Product Image.png`, `Product Image-1.png`, `Logomark.png`, `Logomark-1.png`, `Logomark-2.png`, `Logomark-3.png`, `Logomark-4.png`, `icone-hubspot-svg-150px.svg`, `lottiflow-icone-svg-150px.svg`.

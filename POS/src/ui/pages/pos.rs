@@ -117,11 +117,14 @@ pub fn POSPage(user: User, on_logout: EventHandler<()>) -> Element {
                             }
                         }
                         div { class: "scan-area",
-                            input {
-                                class: "form-input",
-                                placeholder: "Scan or enter barcode",
-                                value: "{barcode_input}",
-                                oninput: move |e| barcode_input.set(e.value()),
+                            div { class: "input-group",
+                                span { class: "input-icon-left", "🔍" }
+                                input {
+                                    class: "form-input",
+                                    placeholder: "Scan or enter barcode",
+                                    value: "{barcode_input}",
+                                    oninput: move |e| barcode_input.set(e.value()),
+                                }
                             }
                             button { class: "btn btn-primary", onclick: handle_scan, "Scan" }
                         }

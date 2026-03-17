@@ -2,7 +2,13 @@
 
 /// Format price as currency string
 pub fn format_price(price: f32) -> String {
-    format!("${:.2}", price)
+    let settings = crate::config::ui_settings::get_ui_settings();
+    let symbol = crate::config::ui_settings::currency_symbol(&settings.currency);
+    if symbol.is_empty() {
+        format!("{} {:.2}", settings.currency, price)
+    } else {
+        format!("{}{:.2}", symbol, price)
+    }
 }
 
 /// Format date and time

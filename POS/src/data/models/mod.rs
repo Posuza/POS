@@ -3,6 +3,7 @@
 pub mod user;
 pub mod product;
 
+#[allow(unused_imports)]
 pub use user::{User, UserRole, AuthState};
 #[allow(unused_imports)]
 pub use product::{Product, CreateProductRequest, UpdateProductRequest};
