@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -14,38 +13,10 @@ struct MediaRule {
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
 
-    let mut css_files: Vec<String> = vec![
-        "src/ui/styles/main.css",
-        "src/ui/components/base.css",
-        "src/ui/pages/pos.css",
-        "src/ui/pages/dashboard.css",
-        "src/ui/pages/login.css",
-        "src/ui/components/cards.css",
-        "src/ui/components/forms.css",
-        "src/ui/components/modal.css",
-        "src/ui/components/navbar.css",
-        "src/ui/components/buttons.css",
-        "src/ui/components/tab_container.css",
-        "src/ui/components/dashboard/sidebar.css",
-        "src/ui/components/dashboard/tables.css",
-        "src/ui/components/dashboard/sales_trend.css",
-        "src/ui/components/dashboard/dashboard.css",
-        "src/ui/components/dashboard/settings.css",
-    ]
-    .into_iter()
-    .map(String::from)
-    .collect();
-
     let ui_dir = PathBuf::from(&manifest_dir).join("src/ui");
     println!("cargo:rerun-if-changed={}", ui_dir.display());
-    let mut seen: HashSet<String> = css_files.iter().cloned().collect();
-    let mut extra_css = collect_css_files(&ui_dir, Path::new(&manifest_dir));
-    extra_css.sort();
-    for rel in extra_css {
-        if seen.insert(rel.clone()) {
-            css_files.push(rel);
-        }
-    }
+    let mut css_files = collect_css_files(&ui_dir, Path::new(&manifest_dir));
+    css_files.sort();
 
     let mut output = String::new();
 

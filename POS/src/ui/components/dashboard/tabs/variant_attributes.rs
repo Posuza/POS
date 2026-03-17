@@ -23,8 +23,8 @@ pub(crate) fn VariantAttributesTab() -> Element {
                         values_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Variant" }
-                }
+                    }, "Add Variant" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -132,7 +132,7 @@ pub(crate) fn VariantAttributesTab() -> Element {
                                     variants_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

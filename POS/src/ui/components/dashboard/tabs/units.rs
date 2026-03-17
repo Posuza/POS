@@ -25,8 +25,8 @@ pub(crate) fn UnitsTab() -> Element {
                         products_state.set("0".to_string());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Unit" }
-                }
+                    }, "Add Unit" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -143,7 +143,7 @@ pub(crate) fn UnitsTab() -> Element {
                                     units_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

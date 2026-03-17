@@ -27,8 +27,8 @@ pub(crate) fn StoresTab() -> Element {
                         phone_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Store" }
-                }
+                    }, "Add Store" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -156,7 +156,7 @@ pub(crate) fn StoresTab() -> Element {
                                     stores_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

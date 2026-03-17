@@ -31,8 +31,8 @@ pub(crate) fn WarehousesTab() -> Element {
                         qty_state.set("0".to_string());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Warehouse" }
-                }
+                    }, "Add Warehouse" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -188,7 +188,7 @@ pub(crate) fn WarehousesTab() -> Element {
                                     warehouses_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

@@ -29,8 +29,8 @@ pub(crate) fn BillersTab() -> Element {
                         country_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Biller" }
-                }
+                    }, "Add Biller" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -172,7 +172,7 @@ pub(crate) fn BillersTab() -> Element {
                                     billers_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

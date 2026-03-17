@@ -1,7 +1,20 @@
 # POS UI Full Audit Report (Admin Dashboard)
 
-Date: 2026-03-16
+Date: 2026-03-17
 Scope: Admin dashboard and admin tabs in `POS/src/ui/pages/dashboard.rs`, supporting styles in `POS/src/ui/pages/dashboard.css` and `POS/src/ui/components/dashboard/tabs/*.css`, chart component in `POS/src/ui/components/dashboard/sales_trend.rs`, settings persistence in `POS/src/config/ui_settings.rs`.
+
+Build Fixes:
+- Addressed `rsx` parse errors in dashboard tab toolbars by adding missing commas after `SearchInput` components in:
+  `POS/src/ui/components/dashboard/tabs/categories.rs`,
+  `POS/src/ui/components/dashboard/tabs/sub_categories.rs`,
+  `POS/src/ui/components/dashboard/tabs/brands.rs`,
+  `POS/src/ui/components/dashboard/tabs/units.rs`,
+  `POS/src/ui/components/dashboard/tabs/variant_attributes.rs`,
+  `POS/src/ui/components/dashboard/tabs/warranties.rs`,
+  `POS/src/ui/components/dashboard/tabs/warehouses.rs`,
+  `POS/src/ui/components/dashboard/tabs/stores.rs`,
+  `POS/src/ui/components/dashboard/tabs/billers.rs`.
+- Removed unused `HashSet` import from `POS/build.rs` after switching to full CSS auto-discovery.
 
 ## Executive Summary
 The admin UI now mirrors the reference design language and includes the full set of inventory/stock/report pages. It supports real metrics, product/sales editing with JSON persistence, CSV exports, normalized status actions, search/sort/pagination across key tabs, and access control workflows. New admin pages were added for warehouse/store/biller management, inventory master data (brands/units/variants/warranties/categories), stock workflows, and report pages. Remaining work is mostly data normalization, wiring create/edit actions to persistence, and advanced analytics.
@@ -127,7 +140,7 @@ The admin UI now mirrors the reference design language and includes the full set
 
 ## UI Asset Coverage (2026-03-17)
 Legend: ✅ implemented, 🔶 partially implemented, ❌ missing, ⏭️ out of admin scope.
-Status note: As of 2026-03-17, all missing/partial admin UI features listed in this report have been implemented with persistence, validation, and refresh behavior. Some non-admin POS/branding assets remain out of scope.
+Status note: As of 2026-03-17, items marked 🔶 remain partially implemented and still require the follow-up work listed in "Remaining Gaps / Issues."
 
 | Asset | Mapped UI | Status | Notes |
 | --- | --- | --- | --- |

@@ -21,8 +21,8 @@ pub(crate) fn BrandsTab() -> Element {
                         name_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Brand" }
-                }
+                    }, "Add Brand" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -118,7 +118,7 @@ pub(crate) fn BrandsTab() -> Element {
                                     brands_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

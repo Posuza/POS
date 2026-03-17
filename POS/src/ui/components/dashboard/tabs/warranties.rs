@@ -25,8 +25,8 @@ pub(crate) fn WarrantiesTab() -> Element {
                         duration_state.set(String::new());
                         status_state.set("Active".to_string());
                         show_modal.set(true);
-                    }, "Add Warranty" }
-                }
+                    }, "Add Warranty" },
+                },
             }
             div { class: "table-container table-compact",
                 table { class: "admin-table",
@@ -130,7 +130,7 @@ pub(crate) fn WarrantiesTab() -> Element {
                                     warranties_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }

@@ -161,7 +161,7 @@ pub(crate) fn SubCategoriesTab() -> Element {
                                     subcats_state.set(next);
                                     show_modal.set(false);
                                 }
-                            }, "Save" }
+                            }, "Save" },
                         }
                     }
                 }
