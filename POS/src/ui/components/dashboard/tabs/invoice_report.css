@@ -248,22 +248,6 @@ table tbody tr:active {
 
 
 
-.admin-sidebar-group {
-    margin-bottom: 18px;
-}
-
-
-
-.admin-sidebar-group-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--grey-400);
-    margin: 12px 12px 8px;
-}
-
-
-
 /* Admin-scoped button overrides */
 .admin-page .btn-primary {
     background: var(--primary-500);

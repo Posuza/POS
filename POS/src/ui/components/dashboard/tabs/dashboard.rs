@@ -288,7 +288,7 @@ pub(crate) fn DashboardTab(user: User) -> Element {
     }
 
     rsx! {
-        DashboardContainer {
+        div { class: "admin-dashboard-page",
             div { class: "dashboard-topbar",
                 div { class: "topbar-left",
                     h2 { "Welcome, Admin" }

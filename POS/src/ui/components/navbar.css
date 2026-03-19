@@ -1,4 +1,4 @@
-/* Navbar component styles (moved out of main.css) */
+/* --- Navbar Component Styles --- */
 
 .navbar {
   background-color: white;
@@ -14,16 +14,159 @@
   min-height: 60px;
 }
 
+/* Responsive navbar layout: left (login), center (brand), right (user+avatar) */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: base-(8px 16px) sm-(8px);
+}
+
+/* Left-most icon container */
+.navbar-icon-left {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+}
+
+/* Logo image in the left slot */
+.navbar-icon-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Brand centered in the navbar */
+.navbar-brand {
+  display: base-(inline) sm-(none);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* Center the brand in the viewport */
+.navbar-brand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  font-size: 22px;
+}
+
+/* Right-most profile container outside the centered .container */
+.navbar-right-outer {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar-user-container {
+  border: 2px solid var(--border-color);
+  border-radius: 25px;
+  padding: 3px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-user-img {
+  width: base-(36px) sm-(28px);
+  height: base-(36px) sm-(28px);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.navbar-avatar-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-color, #667eea);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.navbar-user {
+  font-weight: 600;
+  color: inherit;
+  display: sm-(none);
+}
+
+/* --- Navbar Dropdown Styles --- */
+.nav-dropdown-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.nav-dropdown-icon {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-dropdown-container {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: base-(120px) sm-(20px);
+  background: #fff;
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 0;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 0;
+}
+
+.nav-dropdown-btn-icon {
+  width:  base-(18px) sm-(15px);
+  height: base-(18px) sm-(15px);
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.nav-dropdown-btn-label {
+  display: base-(inline) md-(inline) sm-(none);
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  margin-left: 4px;
+}
+
+/* Legacy/unused in navbar.rs (kept for compatibility) */
 .navbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.navbar-brand {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--primary-color);
 }
 
 .navbar-menu {
@@ -44,89 +187,20 @@
   color: var(--primary-color);
 }
 
-/* Responsive navbar layout: left (login), center (brand), right (user+avatar) */
-.navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: base-(8px 16px) sm-(8px);
-}
 .navbar-left {
   display: flex;
   align-items: center;
   min-width: 80px;
 }
+
 .navbar-center {
   flex: 1 1 auto;
   text-align: center;
   display: sm-(none);
 }
+
 .navbar-right {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-/* Center the brand in the viewport */
-.navbar-brand {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 10000;
-  font-size: 22px;
-}
-
-/* Right-most profile container outside the centered .container */
-.navbar-right-outer {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-/* Left-most icon container */
-.navbar-icon-left {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
-}
-/* Logo image in the left slot */
-.navbar-icon-img {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  display: block;
-}
-.navbar-user {
-  font-weight: 600;
-  color: inherit;
-  display: sm-(none);
-}
-.navbar-user-img {
-  width: base-(36px) sm-(28px);
-  height: base-(36px) sm-(28px);
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.navbar-avatar-fallback {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--primary-color, #667eea);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
 }

@@ -123,8 +123,7 @@ pub(crate) fn StaffTab() -> Element {
     staff_perf_vec.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
 
     rsx! {
-        TabContainer {
-            div { class: "products-header",
+        div { class: "products-header",
                 h2 { "👥 Staff Management" }
                 button {
                     class: "btn btn-primary",
@@ -333,6 +332,5 @@ pub(crate) fn StaffTab() -> Element {
                     }
                 }
             }
-        }
     }
 }

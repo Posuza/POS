@@ -58,8 +58,12 @@ pub fn Navbar(
         Err(_) => None,
     };
 
+    let mut dropdown_open = use_signal(|| false);
+
     rsx! {
-        nav { class: "navbar",
+        nav {
+            class: "navbar",
+            onclick: move |_| dropdown_open.set(false),
             // Left-most icon (logo image)
             div { class: "navbar-icon-left",
                 if let Some(src) = &logo_src {
@@ -81,18 +85,70 @@ pub fn Navbar(
                         "Login"
                     }
                 } else if let Some(u) = user {
-                    if let Some(src) = &image_src {
-                        img { class: "navbar-user-img", src: "{src}" }
-                    } else if let Some(i) = &initials {
-                        div { class: "navbar-avatar-fallback", "{i}" }
-                    } else {
-                        div { class: "navbar-avatar-fallback", "U" }
+                    div {
+                        class: "navbar-user-container",
+                        if let Some(src) = &image_src {
+                            img { class: "navbar-user-img", src: "{src}" }
+                        } else if let Some(i) = &initials {
+                            div { class: "navbar-avatar-fallback", "{i}" }
+                        } else {
+                            div { class: "navbar-avatar-fallback", "U" }
+                        }
+                        span { class: "navbar-user", {u.username} }
                     }
-                    span { class: "navbar-user", {u.username} }
-                    button {
-                        class: "btn btn-secondary",
-                        onclick: move |_| on_logout.call(()),
-                        "Logout"
+
+                    div {
+                        class: "nav-dropdown-wrap",
+                        onclick: move |evt| evt.stop_propagation(),
+                        div {
+                            class: "nav-dropdown-icon",
+                            onclick: move |_| {
+                                let is_open = *dropdown_open.read();
+                                dropdown_open.set(!is_open);
+                            },
+                            crate::ui::icons::Icon {
+                                name: "fa-ellipsis-v".to_string(),
+                                class: Some("dropdown-chevron-icon".to_string()),
+                                aria_label: Some("Open dropdown".to_string()),
+                            }
+                        }
+                        if *dropdown_open.read() {
+                            div { class: "nav-dropdown-container",
+                                button {
+                                    class: "btn btn-secondary nav-dropdown-btn",
+                                    style: "border-radius:0;",
+                                    onclick: move |_| on_logout.call(()),
+                                    crate::ui::icons::Icon {
+                                        name: "fa-gauge".to_string(),
+                                        class: Some("nav-dropdown-btn-icon".to_string()),
+                                        aria_label: Some("Dashboard".to_string()),
+                                    }
+                                    span { class: "nav-dropdown-btn-label", "Dashboard" }
+                                }
+                                button {
+                                    class: "btn btn-secondary nav-dropdown-btn",
+                                    style: "border-radius:0;",
+                                    onclick: move |_| on_logout.call(()),
+                                    crate::ui::icons::Icon {
+                                        name: "fa-gear".to_string(),
+                                        class: Some("nav-dropdown-btn-icon".to_string()),
+                                        aria_label: Some("Setting".to_string()),
+                                    }
+                                    span { class: "nav-dropdown-btn-label", "Setting" }
+                                }
+                                button {
+                                    class: "btn btn-secondary nav-dropdown-btn",
+                                    style: "border-radius:0;",
+                                    onclick: move |_| on_logout.call(()),
+                                    crate::ui::icons::Icon {
+                                        name: "fa-right-from-bracket".to_string(),
+                                        class: Some("nav-dropdown-btn-icon".to_string()),
+                                        aria_label: Some("Logout".to_string()),
+                                    }
+                                    span { class: "nav-dropdown-btn-label", "Logout" }
+                                }
+                            }
+                        }
                     }
                 }
             }

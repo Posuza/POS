@@ -37,17 +37,19 @@ pub fn AdminPage(user: User, on_logout: EventHandler<()>) -> Element {
 
         div { class: "admin-page",
             div { class: "admin-container",
-                div {
-                    class: "admin-menu-toggle-wrap",
-                    button {
-                        class: "admin-menu-toggle",
-                        aria_label: "Open admin menu",
-                        onclick: move |_| {
-                            let next_state = !*sidebar_open.read();
-                            sidebar_open.set(next_state);
-                        },
-                        span { class: "admin-menu-toggle-icon", "☰" }
-                        span { class: "admin-menu-toggle-label", "Menu" }
+                if !*sidebar_open.read() {
+                    div {
+                        class: "admin-menu-toggle-wrap",
+                        button {
+                            class: "admin-menu-toggle",
+                            aria_label: "Open admin menu",
+                            onclick: move |_| {
+                                let next_state = !*sidebar_open.read();
+                                sidebar_open.set(next_state);
+                            },
+                            crate::ui::icons::Icon { name: "fa-bars".to_string(), class: Some("admin-menu-toggle-icon".to_string()), aria_label: Some("Open menu".to_string()) }
+                            span { class: "admin-menu-toggle-label", "Menu" }
+                        }
                     }
                 }
 
@@ -72,45 +74,48 @@ pub fn AdminPage(user: User, on_logout: EventHandler<()>) -> Element {
                             }
                         )
                     }
-                    match *active_tab.read() {
-                        AdminTab::Dashboard => rsx! { DashboardTab { user: user.clone() } },
-                        AdminTab::SuperAdmin => rsx! { SuperAdminTab {} },
-                        AdminTab::SalesDashboard => rsx! { SalesDashboardTab {} },
-                        AdminTab::Sales => rsx! { SalesTab {} },
-                        AdminTab::Products => rsx! { ProductsTab {} },
-                        AdminTab::CreateProduct => rsx! { CreateProductTab {} },
-                        AdminTab::ExpiredProducts => rsx! { ExpiredProductsTab {} },
-                        AdminTab::LowStocks => rsx! { LowStocksTab {} },
-                        AdminTab::Categories => rsx! { CategoriesTab {} },
-                        AdminTab::SubCategories => rsx! { SubCategoriesTab {} },
-                        AdminTab::Brands => rsx! { BrandsTab {} },
-                        AdminTab::Units => rsx! { UnitsTab {} },
-                        AdminTab::VariantAttributes => rsx! { VariantAttributesTab {} },
-                        AdminTab::Warranties => rsx! { WarrantiesTab {} },
-                        AdminTab::PrintBarcode => rsx! { PrintBarcodeTab {} },
-                        AdminTab::PrintQrCode => rsx! { PrintQrCodeTab {} },
-                        AdminTab::Warehouses => rsx! { WarehousesTab {} },
-                        AdminTab::Stores => rsx! { StoresTab {} },
-                        AdminTab::Billers => rsx! { BillersTab {} },
-                        AdminTab::ManageStock => rsx! { ManageStockTab {} },
-                        AdminTab::StockAdjustment => rsx! { StockAdjustmentTab {} },
-                        AdminTab::StockTransfer => rsx! { StockTransferTab {} },
-                        AdminTab::InvoiceReport => rsx! { InvoiceReportTab {} },
-                        AdminTab::SupplierReport => rsx! { SupplierReportTab {} },
-                        AdminTab::CustomerReport => rsx! { CustomerReportTab {} },
-                        AdminTab::ProductReport => rsx! { ProductReportTab {} },
-                        AdminTab::InventoryReport => rsx! { InventoryReportTab {} },
-                        AdminTab::PurchaseReport => rsx! { PurchaseReportTab {} },
-                        AdminTab::SalesReport => rsx! { SalesReportTab {} },
-                        AdminTab::Staff => rsx! { StaffTab {} },
-                        AdminTab::Customers => rsx! { CustomersTab {} },
-                        AdminTab::Inventory => rsx! { InventoryTab {} },
-                        AdminTab::Payments => rsx! { PaymentsTab {} },
-                        AdminTab::Access => rsx! { AccessTab {} },
-                        AdminTab::Suppliers => rsx! { SuppliersTab {} },
-                        AdminTab::Shifts => rsx! { ShiftsTab {} },
-                        AdminTab::Settings => rsx! { SettingsTab {} },
-                        AdminTab::Placeholder(title) => rsx! { PlaceholderTab { title: title } },
+                    {
+                        let tab_element: Element = match *active_tab.read() {
+                            AdminTab::Dashboard => rsx! { DashboardTab { user: user.clone() } },
+                            AdminTab::SuperAdmin => rsx! { SuperAdminTab {} },
+                            AdminTab::SalesDashboard => rsx! { SalesDashboardTab {} },
+                            AdminTab::Sales => rsx! { SalesTab {} },
+                            AdminTab::Products => rsx! { ProductsTab {} },
+                            AdminTab::CreateProduct => rsx! { CreateProductTab {} },
+                            AdminTab::ExpiredProducts => rsx! { ExpiredProductsTab {} },
+                            AdminTab::LowStocks => rsx! { LowStocksTab {} },
+                            AdminTab::Categories => rsx! { CategoriesTab {} },
+                            AdminTab::SubCategories => rsx! { SubCategoriesTab {} },
+                            AdminTab::Brands => rsx! { BrandsTab {} },
+                            AdminTab::Units => rsx! { UnitsTab {} },
+                            AdminTab::VariantAttributes => rsx! { VariantAttributesTab {} },
+                            AdminTab::Warranties => rsx! { WarrantiesTab {} },
+                            AdminTab::PrintBarcode => rsx! { PrintBarcodeTab {} },
+                            AdminTab::PrintQrCode => rsx! { PrintQrCodeTab {} },
+                            AdminTab::Warehouses => rsx! { WarehousesTab {} },
+                            AdminTab::Stores => rsx! { StoresTab {} },
+                            AdminTab::Billers => rsx! { BillersTab {} },
+                            AdminTab::ManageStock => rsx! { ManageStockTab {} },
+                            AdminTab::StockAdjustment => rsx! { StockAdjustmentTab {} },
+                            AdminTab::StockTransfer => rsx! { StockTransferTab {} },
+                            AdminTab::InvoiceReport => rsx! { InvoiceReportTab {} },
+                            AdminTab::SupplierReport => rsx! { SupplierReportTab {} },
+                            AdminTab::CustomerReport => rsx! { CustomerReportTab {} },
+                            AdminTab::ProductReport => rsx! { ProductReportTab {} },
+                            AdminTab::InventoryReport => rsx! { InventoryReportTab {} },
+                            AdminTab::PurchaseReport => rsx! { PurchaseReportTab {} },
+                            AdminTab::SalesReport => rsx! { SalesReportTab {} },
+                            AdminTab::Staff => rsx! { StaffTab {} },
+                            AdminTab::Customers => rsx! { CustomersTab {} },
+                            AdminTab::Inventory => rsx! { InventoryTab {} },
+                            AdminTab::Payments => rsx! { PaymentsTab {} },
+                            AdminTab::Access => rsx! { AccessTab {} },
+                            AdminTab::Suppliers => rsx! { SuppliersTab {} },
+                            AdminTab::Shifts => rsx! { ShiftsTab {} },
+                            AdminTab::Settings => rsx! { SettingsTab {} },
+                            AdminTab::Placeholder(title) => rsx! { PlaceholderTab { title: title } },
+                        };
+                        tab_element
                     }
                 }
             }

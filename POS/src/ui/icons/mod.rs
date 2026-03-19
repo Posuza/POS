@@ -12,8 +12,8 @@ fn render_icon(shape: impl IconShape, class: &str) -> Element {
             view_box: "{vb}",
             xmlns: "{xmlns}",
             fill: "currentColor",
-            height: "16",
-            width: "16",
+            height: "14",
+            width: "14",
             {children}
         }
     }
@@ -82,11 +82,18 @@ pub fn Icon(name: String, class: Option<String>, aria_label: Option<String>) -> 
         "fa-dollar-sign"          => render_icon(FaDollarSign, c),
         "fa-hourglass"            => render_icon(FaHourglass, c),
         "fa-gear"                 => render_icon(FaGear, c),
+        "fa-gauge"                => render_icon(FaGauge, c),
         "fa-globe"                => render_icon(FaGlobe, c),
         "fa-mobile-screen"        => render_icon(FaMobileScreen, c),
         "fa-desktop"              => render_icon(FaDesktop, c),
         "fa-wrench"               => render_icon(FaWrench, c),
         "fa-right-from-bracket"   => render_icon(FaRightFromBracket, c),
+        "fa-chevron-down"          => render_icon(FaChevronDown, c),
+        "fa-chevron-right"         => render_icon(FaChevronRight, c),
+        "fa-chevron-left"          => render_icon(FaChevronLeft, c),
+        "fa-ellipsis-v"           => render_icon(FaEllipsisVertical, c),
+        "fa-bars"                 => render_icon(FaBars, c),
+        "fa-xmark"                 => render_icon(FaXmark, c),
         _                         => rsx! { span { "?" } },
     }
 }

@@ -1,7 +1,10 @@
-/* Base / Reset */
+/* Design tokens — single source of truth for all CSS variables.
+   To add a theme: override these in a scoped :root[data-theme="dark"] block. */
+
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&display=swap");
 
 :root {
+  /* Primary scale */
   --primary-50: #fff4e5;
   --primary-100: #ffe8cc;
   --primary-200: #ffd8a8;
@@ -12,20 +15,28 @@
   --primary-700: #e67700;
   --primary-800: #d9480f;
 
+  /* Semantic color aliases */
   --primary-color: var(--primary-500);
   --secondary-color: var(--navy-800);
+  --accent-color: #0ea5e9;
   --danger-color: var(--danger-500);
+  --success-color: var(--success-500);
+  --warning-color: var(--warning-500);
+  --muted-color: var(--grey-500);
 
+  /* Navy scale */
   --navy-900: #0f172a;
   --navy-800: #1e293b;
   --navy-700: #334155;
 
+  /* State colors */
   --success-500: #22c55e;
   --success-600: #16a34a;
   --warning-500: #f59e0b;
   --danger-500: #ef4444;
   --info-500: #3b82f6;
 
+  /* Grey scale */
   --grey-50: #f8fafc;
   --grey-100: #f1f5f9;
   --grey-200: #e2e8f0;
@@ -36,22 +47,35 @@
   --grey-700: #334155;
   --grey-800: #1f2937;
 
+  /* Backgrounds */
   --bg-color: #f6f7fb;
+  --bg-muted: #f1f5f9;
+  --bg-quiet: #f8fafc;
   --card-bg: #ffffff;
+
+  /* Text */
   --text-color: #1f2937;
   --muted-text: #6b7280;
+
+  /* Border */
   --border-color: #e5e7eb;
 
+  /* Border radius */
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
 
+  /* Shadows */
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
   --shadow-sm: 0 4px 12px rgba(16, 24, 40, 0.08);
   --shadow-md: 0 12px 28px rgba(16, 24, 40, 0.12);
+  --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --shadow-strong: 0 18px 40px rgba(15, 23, 42, 0.12);
 
+  /* Typography */
   --font-family: "Nunito Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-size-xs: 12px;
   --font-size-sm: 13px;
@@ -60,38 +84,3 @@
   --font-size-xl: 18px;
   --font-size-2xl: 20px;
 }
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: var(--font-family);
-  background-color: var(--bg-color);
-  color: var(--text-color);
-  line-height: 1.6;
-  font-size: var(--font-size-md);
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-family);
-  font-weight: 700;
-  color: var(--navy-900);
-  line-height: 1.3;
-}
-
-h1 { font-size: 28px; }
-h2 { font-size: 24px; }
-h3 { font-size: 20px; }
-h4 { font-size: 18px; }
-h5 { font-size: 16px; }
-h6 { font-size: 14px; }
-
-.text-xs { font-size: var(--font-size-xs); }
-.text-sm { font-size: var(--font-size-sm); }
-.text-md { font-size: var(--font-size-md); }
-.text-lg { font-size: var(--font-size-lg); }
-.text-xl { font-size: var(--font-size-xl); }
-.text-2xl { font-size: var(--font-size-2xl); }

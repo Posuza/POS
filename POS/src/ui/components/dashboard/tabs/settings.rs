@@ -29,10 +29,9 @@ pub(crate) fn SettingsTab() -> Element {
     };
 
     rsx! {
-        TabContainer {
-            h2 { "⚙️ Settings" }
+        h2 { "⚙️ Settings" }
 
-            div { class: "settings-form",
+        div { class: "settings-form",
                 div { class: "form-group",
                     label { "Business Name" }
                     input {
@@ -81,7 +80,6 @@ pub(crate) fn SettingsTab() -> Element {
                     onclick: handle_save,
                     "💾 Save Settings"
                 }
-            }
         }
     }
 }

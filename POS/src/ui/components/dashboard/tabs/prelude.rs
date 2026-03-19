@@ -4,7 +4,7 @@ pub(crate) use crate::data::json_store::get_store_fresh;
 pub(crate) use crate::data::models::product::Product;
 pub(crate) use crate::data::models::user::User;
 pub(crate) use crate::services::image_service::ImageService;
-pub(crate) use crate::ui::components::{DashboardContainer, SalesTrend, TabContainer, Table};
+pub(crate) use crate::ui::components::{SalesTrend, Table};
 pub(crate) use crate::utils::formatters::{format_datetime, format_price};
 pub(crate) use base64::Engine;
 pub(crate) use chrono::Utc;

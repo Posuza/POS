@@ -182,9 +182,8 @@ pub fn SidebarMenu(
 ) -> Element {
     let drawer_open = *is_open.read();
     let current_tab = *active_tab.read();
+    let mut collapsed: Signal<Vec<bool>> = use_signal(|| vec![false; 14]);
     let menu = build_menu();
-    let menu_len = menu.len();
-    let mut collapsed: Signal<Vec<bool>> = use_signal(|| vec![false; menu_len]);
     let active_flags: Vec<bool> = menu.iter().map(|s| s.items.iter().any(|i| i.tab == current_tab)).collect();
     let collapse_states: Vec<bool> = collapsed.read().clone();
     drop(collapsed.read());
@@ -207,7 +206,8 @@ pub fn SidebarMenu(
                     crate::ui::icons::Icon { name: "fa-chevron-left".to_string(), class: Some("admin-sidebar-close-icon".to_string()), aria_label: Some("Close".to_string()) }
                 }
             }
-     
+            div {
+                class: "admin-sidebar-nav",
                 for (idx, section) in menu.into_iter().enumerate() {
                     SidebarGroup {
                         idx,
@@ -221,7 +221,7 @@ pub fn SidebarMenu(
                         on_select,
                         on_close,
                     }
-              
+                }
             }
         }
     }
@@ -240,8 +240,7 @@ fn SidebarGroup(
     on_select: EventHandler<AdminTab>,
     on_close: EventHandler<()>,
 ) -> Element {
-    let section_class = if is_collapsed { "admin-sidebar-group section-active" } else { "admin-sidebar-group" };
-    let items_container_class = if is_collapsed { "admin-sidebar-items-container items-container-active" } else { "admin-sidebar-items-container" };
+    let section_class = if has_active { "admin-sidebar-group section-active" } else { "admin-sidebar-group" };
     let section_title_class = if has_active { "admin-sidebar-group-title title-active" } else { "admin-sidebar-group-title" };
     rsx! {
             div { class: "{section_class}",
@@ -251,7 +250,7 @@ fn SidebarGroup(
                     div {
                         class: "section_title_left",
                         crate::ui::icons::Icon { name: icon.to_string(), class: Some("admin-sidebar-group-icon".to_string()), aria_label: None }
-                        span {class: "admin-sidebar-title-label", "{name}" }
+                        span { "{name}" }
                     }
                     crate::ui::icons::Icon {
                         name: if is_collapsed { "fa-chevron-right" } else { "fa-chevron-down" }.to_string(),
@@ -259,22 +258,22 @@ fn SidebarGroup(
                         aria_label: None,
                     }
                 }
-            if is_collapsed {
-                div { class: "{items_container_class}",
-                    for item in items.into_iter() {
-                        button {
-                            class: if current_tab == item.tab { "admin-sidebar-item active" } else { "admin-sidebar-item" },
-                            aria_label: "{item.name}",
-                            onclick: move |_| {
-                                on_select.call(item.tab);
-                                on_close.call(());
-                            },
-                            crate::ui::icons::Icon { name: item.icon.to_string(), class: Some("admin-sidebar-icon".to_string()), aria_label: Some(item.name.to_string()) }
-                            span { class: "admin-sidebar-label", "{item.name}" }
-                        }
-                    }
-                }
-            }
+            // if !is_collapsed {
+            //     div { class: "admin-sidebar-items-container",
+            //         for item in items.into_iter() {
+            //             button {
+            //                 class: if current_tab == item.tab { "admin-sidebar-item active" } else { "admin-sidebar-item" },
+            //                 aria_label: "{item.name}",
+            //                 onclick: move |_| {
+            //                     on_select.call(item.tab);
+            //                     on_close.call(());
+            //                 },
+            //                 crate::ui::icons::Icon { name: item.icon.to_string(), class: Some("admin-sidebar-icon".to_string()), aria_label: Some(item.name.to_string()) }
+            //                 span { class: "admin-sidebar-label", "{item.name}" }
+            //             }
+            //         }
+            //     }
+            // }
         }
     }
 }

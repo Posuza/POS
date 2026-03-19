@@ -134,7 +134,7 @@ pub(crate) fn SalesDashboardTab() -> Element {
     }
 
     rsx! {
-        DashboardContainer {
+        div { class: "admin-dashboard-page",
             div { class: "dashboard-topbar",
                 div { class: "topbar-left",
                     h2 { "Sales Dashboard" }
