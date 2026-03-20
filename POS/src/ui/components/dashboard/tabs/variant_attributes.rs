@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn VariantAttributesTab() -> Element {
-    let store = get_store_fresh();
+    let _store = get_store_fresh();
     let mut variants_state = use_signal(|| extra_list("variant_attributes.json"));
     let mut show_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);

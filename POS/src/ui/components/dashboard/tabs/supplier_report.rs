@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn SupplierReportTab() -> Element {
-    let store = get_store_fresh();
+    let _store = get_store_fresh();
     let suppliers = extra_list("suppliers.json");
     let rows: Vec<(String, String, String, String, String)> = suppliers
         .iter()

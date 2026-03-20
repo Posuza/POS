@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn PaymentsTab() -> Element {
-    let store = get_store_fresh();
+    let _store = get_store_fresh();
     let payments = extra_list("payments.json");
     let payments_owned: Vec<serde_json::Value> = payments.iter().map(|p| (*p).clone()).collect();
     let payments_for_normalize = payments_owned.clone();

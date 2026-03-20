@@ -2,10 +2,12 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn SuppliersTab() -> Element {
-    let store = get_store_fresh();
-    let suppliers = extra_list("suppliers.json");
-    let mut suppliers_state =
-        use_signal(|| suppliers.iter().map(|s| (*s).clone()).collect::<Vec<_>>());
+    let mut suppliers_state = use_signal(|| {
+        extra_list("suppliers.json")
+            .iter()
+            .map(|v| (*v).clone())
+            .collect::<Vec<_>>()
+    });
     let suppliers_owned = suppliers_state.read().clone();
     let active_suppliers = suppliers_owned
         .iter()
@@ -14,6 +16,7 @@ pub(crate) fn SuppliersTab() -> Element {
             status.is_empty() || status.eq_ignore_ascii_case("active")
         })
         .count();
+
     let mut add_name = use_signal(|| String::new());
     let mut add_contact = use_signal(|| String::new());
     let mut add_phone = use_signal(|| String::new());
@@ -22,6 +25,7 @@ pub(crate) fn SuppliersTab() -> Element {
     let mut add_status = use_signal(|| "active".to_string());
     let mut add_msg = use_signal(|| None::<String>);
     let mut add_error = use_signal(|| None::<String>);
+
     let mut show_edit_modal = use_signal(|| false);
     let mut edit_id = use_signal(|| None::<String>);
     let mut edit_name = use_signal(|| String::new());
@@ -32,6 +36,7 @@ pub(crate) fn SuppliersTab() -> Element {
     let mut edit_status = use_signal(|| "active".to_string());
     let mut edit_msg = use_signal(|| None::<String>);
     let mut edit_error = use_signal(|| None::<String>);
+
     let mut delete_msg = use_signal(|| None::<String>);
     let mut delete_error = use_signal(|| None::<String>);
 
@@ -50,12 +55,7 @@ pub(crate) fn SuppliersTab() -> Element {
                 add_error.set(Some("Supplier name is required.".to_string()));
                 return;
             }
-            if !is_valid_email(&add_email.read()) {
-                add_error.set(Some("Please enter a valid email address.".to_string()));
-                return;
-            }
             let mut updated = suppliers_state.read().clone();
-            let now = now_iso();
             updated.push(json!({
                 "id": new_id("sup"),
                 "name": add_name.read().clone(),
@@ -64,8 +64,7 @@ pub(crate) fn SuppliersTab() -> Element {
                 "email": add_email.read().clone(),
                 "address": add_address.read().clone(),
                 "status": add_status.read().clone(),
-                "created_at": now,
-                "updated_at": now,
+                "created_at": now_iso(),
             }));
             match save_extra_to_json("suppliers.json", &updated) {
                 Ok(_) => {
@@ -101,34 +100,27 @@ pub(crate) fn SuppliersTab() -> Element {
         let mut edit_error = edit_error.clone();
         let mut show_edit_modal = show_edit_modal.clone();
         move |_| {
-            let id = match edit_id.read().clone() {
-                Some(id) => id,
-                None => return,
-            };
-            let mut updated = suppliers_state.read().clone();
-            if let Some(entry) = updated
-                .iter_mut()
-                .find(|s| pick_first(s, &["id", "supplier_id"]) == id)
-            {
-                if let Some(obj) = entry.as_object_mut() {
-                    if !is_valid_email(&edit_email.read()) {
-                        edit_error.set(Some("Please enter a valid email address.".to_string()));
-                        return;
-                    }
-                    obj.insert("name".to_string(), json!(edit_name.read().clone()));
-                    obj.insert(
-                        "contact_name".to_string(),
-                        json!(edit_contact.read().clone()),
-                    );
-                    obj.insert("phone".to_string(), json!(edit_phone.read().clone()));
-                    obj.insert("email".to_string(), json!(edit_email.read().clone()));
-                    obj.insert("address".to_string(), json!(edit_address.read().clone()));
-                    obj.insert("status".to_string(), json!(edit_status.read().clone()));
-                    obj.insert("updated_at".to_string(), json!(now_iso()));
-                }
-            } else {
-                edit_error.set(Some("Supplier not found.".to_string()));
+            let Some(sid) = edit_id.read().clone() else {
                 return;
+            };
+            if edit_name.read().is_empty() {
+                edit_error.set(Some("Supplier name is required.".to_string()));
+                return;
+            }
+            let mut updated = suppliers_state.read().clone();
+            if let Some(s) = updated
+                .iter_mut()
+                .find(|s| pick_first(s, &["id", "supplier_id"]) == sid)
+            {
+                *s = json!({
+                    "id": sid,
+                    "name": edit_name.read().clone(),
+                    "contact_name": edit_contact.read().clone(),
+                    "phone": edit_phone.read().clone(),
+                    "email": edit_email.read().clone(),
+                    "address": edit_address.read().clone(),
+                    "status": edit_status.read().clone(),
+                });
             }
             match save_extra_to_json("suppliers.json", &updated) {
                 Ok(_) => {
@@ -136,7 +128,6 @@ pub(crate) fn SuppliersTab() -> Element {
                     edit_error.set(None);
                     edit_msg.set(Some("✅ Supplier updated.".to_string()));
                     show_edit_modal.set(false);
-                    edit_id.set(None);
                     spawn(async move {
                         sleep_ms(2_000).await;
                         edit_msg.set(None);
@@ -455,5 +446,4 @@ pub(crate) fn SuppliersTab() -> Element {
                 }
             }
         }
-    }
-}
+    }}

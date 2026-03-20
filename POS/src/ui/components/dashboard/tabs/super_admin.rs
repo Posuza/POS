@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn SuperAdminTab() -> Element {
-    let store = get_store_fresh();
+    let _store = get_store_fresh();
     let mut stores_state = use_signal(|| {
         extra_list("stores.json")
             .iter()
@@ -176,7 +176,162 @@ pub(crate) fn SuperAdminTab() -> Element {
     };
 
     rsx! {
-        div { class: "admin-form-page",
+        div { class: "super-admin-page",
+            div { class: "sa-topbar",
+                div { class: "sa-topbar-left",
+                    h2 { "Welcome, Admin" }
+                    p { "You have 200+ Orders, Today" }
+                }
+                div { class: "sa-topbar-right",
+                    div { class: "sa-topbar-range",
+                        span { "📅" }
+                        span { "01 Jan 2024 - 07 Jan 2024" }
+                    }
+                }
+            }
+
+            div { class: "sa-hero-banner",
+                div { class: "sa-hero-text",
+                    h1 { "Welcome Back, Adrian" }
+                    p { "14 New Companies Subscribed Today !!!" }
+                }
+                div { class: "sa-hero-actions",
+                    button { class: "sa-hero-btn btn-dark", "Companies" }
+                    button { class: "sa-hero-btn btn-light", "All Packages" }
+                }
+            }
+
+            div { class: "sa-stat-row",
+                div { class: "sa-stat-card",
+                    div { class: "sa-stat-header",
+                        div { class: "sa-stat-icon slate", "🏢" }
+                        span { class: "sa-stat-badge positive", "+19.01%" }
+                    }
+                    div { class: "sa-stat-body", strong { "5468" } span { "Total Companies" } }
+                    div { class: "sa-stat-footer-chart",
+                        span { class: "sa-minibar orange" } span { class: "sa-minibar orange" } span { class: "sa-minibar orange" } span { class: "sa-minibar orange" } span { class: "sa-minibar orange" }
+                    }
+                }
+                div { class: "sa-stat-card",
+                    div { class: "sa-stat-header",
+                        div { class: "sa-stat-icon indigo", "🏷️" }
+                        span { class: "sa-stat-badge positive", "-12%" }
+                    }
+                    div { class: "sa-stat-body", strong { "4598" } span { "Active Companies" } }
+                    div { class: "sa-stat-footer-chart",
+                        span { class: "sa-minibar indigo" } span { class: "sa-minibar indigo" } span { class: "sa-minibar indigo" } span { class: "sa-minibar indigo" } span { class: "sa-minibar indigo" }
+                    }
+                }
+                div { class: "sa-stat-card",
+                    div { class: "sa-stat-header",
+                        div { class: "sa-stat-icon slate", "👥" }
+                        span { class: "sa-stat-badge positive", "+6%" }
+                    }
+                    div { class: "sa-stat-body", strong { "3698" } span { "Total Subscribers" } }
+                    div { class: "sa-stat-footer-chart",
+                        span { class: "sa-minibar blue" } span { class: "sa-minibar blue" } span { class: "sa-minibar blue" } span { class: "sa-minibar blue" } span { class: "sa-minibar blue" }
+                    }
+                }
+                div { class: "sa-stat-card",
+                    div { class: "sa-stat-header",
+                        div { class: "sa-stat-icon slate", "💰" }
+                        span { class: "sa-stat-badge negative", "-16%" }
+                    }
+                    div { class: "sa-stat-body", strong { "$89,878.58" } span { "Total Earnings" } }
+                    div { class: "sa-stat-footer-chart",
+                        span { class: "sa-minibar green" } span { class: "sa-minibar green" } span { class: "sa-minibar green" } span { class: "sa-minibar green" } span { class: "sa-minibar green" }
+                    }
+                }
+            }
+
+            div { class: "sa-grid-3",
+                div { class: "sa-content-card",
+                    div { class: "sa-card-header", h3 { "Companies" } select { class: "sa-card-filter", option { "This Month" } option { "This Year" } } }
+                    div { class: "sa-revenue-chart placeholder-chart" }
+                }
+                div { class: "sa-content-card",
+                    div { class: "sa-card-header", h3 { "Revenue" } select { class: "sa-card-filter", option { "This Month" } option { "This Year" } } }
+                    div { class: "sa-revenue-chart placeholder-chart" }
+                }
+                div { class: "sa-content-card",
+                    div { class: "sa-card-header", h3 { "Top Plans" } select { class: "sa-card-filter", option { "This Month" } option { "This Year" } } }
+                    div { class: "sa-top-plans-donut",
+                        div { class: "sa-donut-wrap",
+                            div { class: "sa-donut" }
+                            div { class: "sa-donut-inner", "7,185" }
+                        }
+                        div { class: "sa-plan-legend",
+                            div { class: "sa-plan-leg-item",
+                                div { class: "sa-plan-leg-label", span { class: "sa-plan-dot orange" } span { "Growth" } }
+                                span { class: "sa-plan-pct", "35%" }
+                            }
+                            div { class: "sa-plan-leg-item",
+                                div { class: "sa-plan-leg-label", span { class: "sa-plan-dot yellow" } span { "Pro" } }
+                                span { class: "sa-plan-pct", "45%" }
+                            }
+                            div { class: "sa-plan-leg-item",
+                                div { class: "sa-plan-leg-label", span { class: "sa-plan-dot blue" } span { "Enterprise" } }
+                                span { class: "sa-plan-pct", "20%" }
+                            }
+                        }
+                    }
+                }
+            }
+
+            div { class: "sa-grid-3",
+                div { class: "sa-content-card",
+                    div { class: "sa-card-header", h3 { "Recent Transactions" } button { class: "sa-action-link", "View All" } }
+                    div { class: "sa-list",
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "A" } div { class: "sa-list-info", strong { "AdrianTech" } span { "Sep 15, 2024" } } }
+                            div { class: "sa-list-action", strong { "$500" } span { "Pro Plan" } }
+                        }
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "B" } div { class: "sa-list-info", strong { "ByteCorp" } span { "Sep 14, 2024" } } }
+                            div { class: "sa-list-action", strong { "$250" } span { "Growth Plan" } }
+                        }
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "Z" } div { class: "sa-list-info", strong { "Zenith Inc." } span { "Sep 14, 2024" } } }
+                            div { class: "sa-list-action", strong { "$1000" } span { "Enterprise" } }
+                        }
+                    }
+                }
+                div { class: "sa-content-card",
+                    div { class: "sa-card-header", h3 { "Recently Registered" } button { class: "sa-action-link", "View All" } }
+                    div { class: "sa-list",
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "G" } div { class: "sa-list-info", strong { "Global Retail" } span { "London, UK" } } }
+                            div { class: "sa-list-action", strong { "Active" } }
+                        }
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "S" } div { class: "sa-list-info", strong { "Swift Mart" } span { "Toronto, UK" } } }
+                            div { class: "sa-list-action", strong { "Active" } }
+                        }
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "V" } div { class: "sa-list-info", strong { "Value Store" } span { "New York, USA" } } }
+                            div { class: "sa-list-action", strong { "Pending" } }
+                        }
+                    }
+                }
+                div { class: "sa-content-card",
+                    div { class: "sa-card-header", h3 { "Recent Plan Expired" } button { class: "sa-action-link", "View All" } }
+                    div { class: "sa-list",
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "N" } div { class: "sa-list-info", strong { "Nova Shop" } span { "Nov 01, 2024" } } }
+                            div { class: "sa-list-action", strong { color: "#dc2626", "Expired" } }
+                        }
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "O" } div { class: "sa-list-info", strong { "Omega Grocers" } span { "Oct 28, 2024" } } }
+                            div { class: "sa-list-action", strong { color: "#dc2626", "Expired" } }
+                        }
+                        div { class: "sa-list-row",
+                            div { class: "sa-list-main", span { class: "sa-list-avatar", "P" } div { class: "sa-list-info", strong { "Prime Mart" } span { "Oct 15, 2024" } } }
+                            div { class: "sa-list-action", strong { color: "#dc2626", "Expired" } }
+                        }
+                    }
+                }
+            }
+
             if let Some(msg) = action_msg.read().clone() {
                 div { class: "message",
                     "{msg}"

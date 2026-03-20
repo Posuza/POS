@@ -188,7 +188,7 @@ table tbody tr:active {
 
 .report-filters {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: base-(repeat(4, 1fr)) lg-(repeat(2, 1fr)) md-(1fr);
     gap: 12px;
     padding: 12px 14px;
     border-radius: 14px;
@@ -241,13 +241,11 @@ table tbody tr:active {
 
 
 .form-field.span-2 {
-    grid-column: span 2;
+    grid-column: base-(span 2) md-(span 1);
 }
 
 
-    .form-field.span-2 {
-        grid-column: span 1;
-    }
+
 
 
 

@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn ExpiredProductsTab() -> Element {
-    let store = get_store_fresh();
+    let _store = get_store_fresh();
     let expired = extra_list("expired_products.json");
     let rows: Vec<(String, String, String, String, String)> = expired
         .iter()

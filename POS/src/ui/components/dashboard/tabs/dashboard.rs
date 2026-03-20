@@ -313,35 +313,80 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
             div { class: "stat-row",
                 div { class: "stat-card-lg accent-orange",
-                    span { "Total Sales" }
-                    strong { "{total_revenue_s}" }
-                    em { "{revenue_delta_s} vs last day" }
+                    div { class: "stat-header", div { class: "stat-icon-wrap", "📄" } span { class: "stat-title", "Total Sales" } }
+                    div { class: "stat-body", strong { "{total_revenue_s}" } span { class: "stat-chip", "↑ 22%" } }
                 }
                 div { class: "stat-card-lg accent-blue",
-                    span { "Total Transactions" }
-                    strong { "{total_transactions}" }
-                    em { "All time" }
+                    div { class: "stat-header", div { class: "stat-icon-wrap", "🔄" } span { class: "stat-title", "Total Sales Return" } }
+                    div { class: "stat-body", strong { "$16,478" } span { class: "stat-chip", "↓ 12%" } }
                 }
                 div { class: "stat-card-lg accent-teal",
-                    span { "Total Customers" }
-                    strong { "{customers.len()}" }
-                    em { "{active_users_s} active" }
+                    div { class: "stat-header", div { class: "stat-icon-wrap", "📥" } span { class: "stat-title", "Total Purchase" } }
+                    div { class: "stat-body", strong { "{total_sales_s}" } span { class: "stat-chip", "↑ 18%" } }
                 }
                 div { class: "stat-card-lg accent-indigo",
-                    span { "Inventory Value" }
-                    strong { "{total_sales_s}" }
-                    em { "{total_products_s} products" }
+                    div { class: "stat-header", div { class: "stat-icon-wrap", "📤" } span { class: "stat-title", "Total Purchase Return" } }
+                    div { class: "stat-body", strong { "$18,458" } span { class: "stat-chip", "↓ 20%" } }
+                }
+            }
+
+            div { class: "secondary-stat-row",
+                div { class: "stat-card-light",
+                    div { class: "stat-light-content",
+                        span { "Profit" }
+                        strong { "$8,458,798" }
+                        div { class: "stat-light-footer",
+                            span { class: "trend-text positive", "+35%" } span { class: "trend-vs", "vs Last month" }
+                            a { class: "view-all-link", href: "#", "View All" }
+                        }
+                    }
+                    div { class: "stat-light-icon icon-teal", "📈" }
+                }
+                div { class: "stat-card-light",
+                    div { class: "stat-light-content",
+                        span { "Invoice Due" }
+                        strong { "$48,988" }
+                        div { class: "stat-light-footer",
+                            span { class: "trend-text negative", "-19%" } span { class: "trend-vs", "vs Last month" }
+                            a { class: "view-all-link", href: "#", "View All" }
+                        }
+                    }
+                    div { class: "stat-light-icon icon-indigo", "⏱" }
+                }
+                div { class: "stat-card-light",
+                    div { class: "stat-light-content",
+                        span { "Total Expenses" }
+                        strong { "$8,980,097" }
+                        div { class: "stat-light-footer",
+                            span { class: "trend-text positive", "+41%" } span { class: "trend-vs", "vs Last month" }
+                            a { class: "view-all-link", href: "#", "View All" }
+                        }
+                    }
+                    div { class: "stat-light-icon icon-orange", "💸" }
+                }
+                div { class: "stat-card-light",
+                    div { class: "stat-light-content",
+                        span { "Payment Returns" }
+                        strong { "$78,458" }
+                        div { class: "stat-light-footer",
+                            span { class: "trend-text negative", "-20%" } span { class: "trend-vs", "vs Last month" }
+                            a { class: "view-all-link", href: "#", "View All" }
+                        }
+                    }
+                    div { class: "stat-light-icon icon-purple", "🔁" }
                 }
             }
 
             div { class: "dashboard-grid-main",
                 div { class: "content-card chart-card",
                     div { class: "card-header-row",
-                        h3 { "Sales & Purchase" }
+                        h3 { span { class: "header-icon", "📉" } "Sales & Purchase" }
                         div { class: "pill-group",
                             button { class: "pill-btn", "1D" }
                             button { class: "pill-btn", "1W" }
                             button { class: "pill-btn", "1M" }
+                            button { class: "pill-btn", "3M" }
+                            button { class: "pill-btn", "6M" }
                             button { class: "pill-btn active", "1Y" }
                         }
                     }
@@ -353,19 +398,29 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
                 div { class: "content-card overall-card",
                     div { class: "card-header-row",
-                        h3 { "Overall Information" }
-                        span { class: "card-note", "Key totals" }
+                        h3 { span { class: "header-icon", "ℹ" } "Overall Information" }
                     }
-                    div { class: "overall-grid",
-                        div { class: "overall-item", strong { "{active_suppliers}" } span { "Suppliers" } }
-                        div { class: "overall-item", strong { "{customers.len()}" } span { "Customers" } }
-                        div { class: "overall-item", strong { "{total_transactions}" } span { "Orders" } }
+                    div { class: "overall-stats",
+                        div { class: "overall-box", span { class: "ob-icon", "👥" } span { "Suppliers" } strong { "{active_suppliers}" } }
+                        div { class: "overall-box", span { class: "ob-icon", "👤" } span { "Customer" } strong { "{customers.len()}" } }
+                        div { class: "overall-box", span { class: "ob-icon", "🛒" } span { "Orders" } strong { "{total_transactions}" } }
                     }
-                    div { class: "donut-mini",
-                        div { class: "donut-chart", style: "{donut_style}" }
-                        div { class: "donut-labels",
-                            span { "{categories_s} categories" }
-                            span { "{format_price(payments_total)} payments" }
+                    div { class: "customers-overview-header", style: "display: flex; justify-content: space-between; align-items: center;",
+                        h4 { style: "font-size: 14px; margin: 0;", "Customers Overview" }
+                        button { class: "card-filter", "Today ˅" }
+                    }
+                    div { class: "customers-overview",
+                        div { class: "donut-wrapper",
+                            div { class: "donut-chart", style: "background: conic-gradient(#14b8a6 0 60%, #22c55e 60% 100%);" }
+                            div { class: "donut-center" }
+                        }
+                        div { class: "donut-legend",
+                            div { class: "donut-leg-item",
+                                strong { "5.5K" } span { "First Time" } div { class: "donut-leg-box leg-teal", "60%" }
+                            }
+                            div { class: "donut-leg-item",
+                                strong { "3.5K" } span { "Return" } div { class: "donut-leg-box leg-green", "40%" }
+                            }
                         }
                     }
                 }
@@ -374,18 +429,21 @@ pub(crate) fn DashboardTab(user: User) -> Element {
             div { class: "dashboard-grid-3",
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Top Selling Products" }
-                        span { class: "card-note", "This month" }
+                        h3 { span { class: "header-icon", "📦" } "Top Selling Products" }
+                        button { class: "card-filter", "Today ˅" }
                     }
                     div { class: "data-list",
                         { product_sales_vec.iter().take(5).map(|(_id, name, qty, revenue)| {
                             rsx!(
                                 div { class: "data-row",
                                     div { class: "data-main",
-                                        strong { "{name}" }
-                                        span { "{qty} sold" }
+                                        div { class: "data-avatar fallback", "🛒" }
+                                        div { class: "data-info",
+                                            strong { "{name}" }
+                                            span { "{qty} sold" }
+                                        }
                                     }
-                                    span { class: "data-chip", "{format_price(*revenue)}" }
+                                    div { class: "data-action", span { class: "data-chip", "{format_price(*revenue)}" } }
                                 }
                             )
                         }) }
@@ -394,18 +452,21 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Low Stock Products" }
-                        span { class: "card-note", "Need reorder" }
+                        h3 { span { class: "header-icon", "⚠️" } "Low Stock Products" }
+                        a { class: "view-all-link", href: "#", "View All" }
                     }
                     div { class: "data-list",
                         { products.iter().filter(|p| p.quantity < LOW_STOCK_THRESHOLD).take(5).map(|p| {
                             rsx!(
                                 div { class: "data-row",
                                     div { class: "data-main",
-                                        strong { "{p.name}" }
-                                        span { "{p.category}" }
+                                        div { class: "data-avatar fallback", "📦" }
+                                        div { class: "data-info",
+                                            strong { "{p.name}" }
+                                            span { "ID: #{p.id}" }
+                                        }
                                     }
-                                    span { class: "data-chip", "{p.quantity} left" }
+                                    div { class: "data-action", span { class: "data-chip negative", "Instock {p.quantity}" } }
                                 }
                             )
                         }) }
@@ -414,18 +475,21 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Recent Sales" }
-                        span { class: "card-note", "Today" }
+                        h3 { span { class: "header-icon", "🛒" } "Recent Sales" }
+                        button { class: "card-filter", "Today ˅" }
                     }
                     div { class: "data-list",
                         { sales.iter().rev().take(5).map(|s| {
                             rsx!(
                                 div { class: "data-row",
                                     div { class: "data-main",
-                                        strong { "Sale {s.id}" }
-                                        span { "{format_datetime(&s.created_at)}" }
+                                        div { class: "data-avatar fallback", "💳" }
+                                        div { class: "data-info",
+                                            strong { "Receipt #{s.receipt_no}" }
+                                            span { "{format_datetime(&s.created_at)}" }
+                                        }
                                     }
-                                    span { class: "data-chip", "{format_price(s.total)}" }
+                                    div { class: "data-action", span { class: "data-chip neutral", "{format_price(s.total)}" } }
                                 }
                             )
                         }) }
@@ -436,8 +500,8 @@ pub(crate) fn DashboardTab(user: User) -> Element {
             div { class: "dashboard-grid-2",
                 div { class: "content-card stats-card",
                     div { class: "card-header-row",
-                        h3 { "Sales Statistics" }
-                        span { class: "card-note", "Last 12 periods" }
+                        h3 { span { class: "header-icon", "📈" } "Sales Statistics" }
+                        button { class: "card-filter", "2025 ˅" }
                     }
                     div { class: "stats-bars",
                         { stat_heights.iter().map(|h| rsx!( span { class: "stats-bar", style: "height: {h}%;" } )) }
@@ -446,18 +510,21 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Recent Transactions" }
-                        span { class: "card-note", "Latest" }
+                        h3 { span { class: "header-icon", "🚩" } "Recent Transactions" }
+                        a { class: "view-all-link", href: "#", "View All" }
                     }
                     div { class: "data-list",
                         { sales.iter().rev().take(6).map(|s| {
                             rsx!(
                                 div { class: "data-row",
                                     div { class: "data-main",
-                                        strong { "{s.cashier_id}" }
-                                        span { "Order {s.receipt_no}" }
+                                        div { class: "data-avatar fallback", "👤" }
+                                        div { class: "data-info",
+                                            strong { "Order {s.receipt_no}" }
+                                            span { "{s.cashier_id}" }
+                                        }
                                     }
-                                    span { class: "data-chip", "{format_price(s.total)}" }
+                                    div { class: "data-action", span { class: "data-chip", "{format_price(s.total)}" } }
                                 }
                             )
                         }) }
@@ -468,18 +535,21 @@ pub(crate) fn DashboardTab(user: User) -> Element {
             div { class: "dashboard-grid-3",
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Top Customers" }
-                        span { class: "card-note", "Repeat buyers" }
+                        h3 { span { class: "header-icon", "👥" } "Top Customers" }
+                        a { class: "view-all-link", href: "#", "View All" }
                     }
                     div { class: "data-list",
                         { top_customers.iter().take(5).map(|(name, count)| {
                             rsx!(
                                 div { class: "data-row",
                                     div { class: "data-main",
-                                        strong { "{name}" }
-                                        span { "{count} orders" }
+                                        div { class: "data-avatar fallback", "👤" }
+                                        div { class: "data-info",
+                                            strong { "{name}" }
+                                            span { "{count} orders" }
+                                        }
                                     }
-                                    span { class: "data-chip", "Active" }
+                                    div { class: "data-action", span { class: "data-chip neutral", "Active" } }
                                 }
                             )
                         }) }
@@ -488,18 +558,21 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Top Categories" }
-                        span { class: "card-note", "Revenue share" }
+                        h3 { span { class: "header-icon", "📑" } "Top Categories" }
+                        button { class: "card-filter", "Weekly ˅" }
                     }
                     div { class: "data-list",
                         { category_vec.iter().take(4).map(|(name, total)| {
                             rsx!(
                                 div { class: "data-row",
                                     div { class: "data-main",
-                                        strong { "{name}" }
-                                        span { "Sales" }
+                                        div { class: "data-avatar fallback", "🛍" }
+                                        div { class: "data-info",
+                                            strong { "{name}" }
+                                            span { "Sales" }
+                                        }
                                     }
-                                    span { class: "data-chip", "{format_price(*total)}" }
+                                    div { class: "data-action", span { class: "data-chip neutral", "{format_price(*total)}" } }
                                 }
                             )
                         }) }
@@ -508,8 +581,8 @@ pub(crate) fn DashboardTab(user: User) -> Element {
 
                 div { class: "content-card list-card",
                     div { class: "card-header-row",
-                        h3 { "Order Statistics" }
-                        span { class: "card-note", "Weekly pattern" }
+                        h3 { span { class: "header-icon", "📦" } "Order Statistics" }
+                        button { class: "card-filter", "Weekly ˅" }
                     }
                     div { class: "heat-grid",
                         { heat_cells.iter().map(|v| {

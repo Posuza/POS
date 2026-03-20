@@ -2,7 +2,7 @@ use super::prelude::*;
 
 #[component]
 pub(crate) fn ShiftsTab() -> Element {
-    let store = get_store_fresh();
+    let _store = get_store_fresh();
     let shifts = extra_list("shifts.json");
     let open_shifts = shifts
         .iter()

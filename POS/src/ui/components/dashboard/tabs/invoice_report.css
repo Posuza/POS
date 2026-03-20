@@ -210,7 +210,7 @@ table tbody tr:active {
 
 .kpi-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: base-(repeat(4, 1fr)) lg-(repeat(2, 1fr)) sm-(1fr);
     gap: 12px;
 }
 
